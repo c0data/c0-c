@@ -240,6 +240,23 @@ typedef struct {
 c0_block_iter c0_stream_blocks(const c0_stream *s);
 int c0_next_block(c0_block_iter *it, c0_bytes *out);
 
+/* --- Pretty (Unicode Control Pictures, U+2400 block) --- */
+
+/*
+ * Format compact bytes as a human-readable UTF-8 string (compact layout).
+ * Returns a malloc'd, NUL-terminated string the caller frees; *outlen (if not
+ * NULL) gets the byte length excluding the NUL. `indent` defaults to "  " when
+ * NULL. Returns NULL on allocation failure.
+ */
+char *c0_pretty_format(const uint8_t *buf, size_t len, const char *indent, size_t *outlen);
+
+/*
+ * Parse pretty text back to compact bytes. Returns a malloc'd buffer the caller
+ * frees; *outlen (if not NULL) gets the length. Returns NULL on allocation
+ * failure.
+ */
+uint8_t *c0_pretty_parse(const char *str, size_t len, size_t *outlen);
+
 #ifdef __cplusplus
 }
 #endif
@@ -841,6 +858,342 @@ int c0_next_block(c0_block_iter *it, c0_bytes *out) {
         }
     }
     return 0;
+}
+
+/* --- Pretty --- */
+
+typedef struct {
+    uint8_t *d;
+    size_t n;
+    size_t cap;
+    int oom;
+} c0__sb;
+
+static int c0__sb_reserve(c0__sb *s, size_t extra) {
+    if (s->oom) return 0;
+    if (s->n + extra > s->cap) {
+        size_t ncap = s->cap ? s->cap : 64;
+        uint8_t *nd;
+        while (ncap < s->n + extra) ncap *= 2;
+        nd = (uint8_t *)realloc(s->d, ncap);
+        if (!nd) {
+            s->oom = 1;
+            return 0;
+        }
+        s->d = nd;
+        s->cap = ncap;
+    }
+    return 1;
+}
+
+static void c0__sb_byte(c0__sb *s, uint8_t b) {
+    if (c0__sb_reserve(s, 1)) s->d[s->n++] = b;
+}
+
+static void c0__sb_raw(c0__sb *s, const uint8_t *p, size_t n) {
+    if (n && c0__sb_reserve(s, n)) {
+        memcpy(s->d + s->n, p, n);
+        s->n += n;
+    }
+}
+
+/* Emit U+2400+byte as 3-byte UTF-8 (the byte is in 0x00..0x1F). */
+static void c0__sb_glyph(c0__sb *s, uint8_t byte) {
+    unsigned cp = 0x2400u + byte;
+    c0__sb_byte(s, (uint8_t)(0xE0 | (cp >> 12)));
+    c0__sb_byte(s, (uint8_t)(0x80 | ((cp >> 6) & 0x3F)));
+    c0__sb_byte(s, (uint8_t)(0x80 | (cp & 0x3F)));
+}
+
+static size_t c0__p_data(const uint8_t *buf, size_t len, size_t pos, c0__sb *o) {
+    while (pos < len && buf[pos] >= 0x20) {
+        c0__sb_byte(o, buf[pos]);
+        pos++;
+    }
+    return pos;
+}
+
+static void c0__p_indent(c0__sb *o, const char *indent, size_t ilen, int depth) {
+    int i;
+    if (depth < 0) depth = 0;
+    for (i = 0; i < depth; i++) c0__sb_raw(o, (const uint8_t *)indent, ilen);
+}
+
+static size_t c0__p_fields(const uint8_t *buf, size_t len, size_t pos, c0__sb *o) {
+    while (pos < len) {
+        uint8_t b = buf[pos];
+        if (b == C0_US) {
+            c0__sb_glyph(o, C0_US);
+            pos++;
+        } else if (b == C0_DLE) {
+            c0__sb_glyph(o, C0_DLE);
+            pos++;
+            if (pos < len) {
+                if (buf[pos] < 0x20) c0__sb_glyph(o, buf[pos]);
+                else c0__sb_byte(o, buf[pos]);
+                pos++;
+            }
+        } else if (b == C0_ENQ) {
+            c0__sb_glyph(o, C0_ENQ);
+            pos++;
+        } else if (b == C0_ETB) {
+            c0__sb_glyph(o, C0_ETB);
+            pos++;
+            while (pos < len && buf[pos] >= 0x20) {
+                c0__sb_byte(o, buf[pos]);
+                pos++;
+            }
+        } else if (b == C0_STX) {
+            c0__sb_glyph(o, C0_STX);
+            pos++;
+            while (pos < len) {
+                uint8_t c = buf[pos];
+                if (c == C0_ETX) {
+                    c0__sb_glyph(o, C0_ETX);
+                    pos++;
+                    break;
+                } else if (c == C0_US) {
+                    c0__sb_glyph(o, C0_US);
+                    pos++;
+                } else if (c < 0x20) {
+                    c0__sb_glyph(o, c);
+                    pos++;
+                } else {
+                    c0__sb_byte(o, c);
+                    pos++;
+                }
+            }
+        } else if (b < 0x20) {
+            break;
+        } else {
+            c0__sb_byte(o, b);
+            pos++;
+        }
+    }
+    return pos;
+}
+
+static void c0__p_format(const uint8_t *buf, size_t len, const char *indent,
+                         size_t ilen, c0__sb *o) {
+    size_t pos = 0;
+    int depth = 0;
+    int line_start = 1;
+    while (pos < len) {
+        uint8_t b = buf[pos];
+        if (b >= 0x20) {
+            c0__sb_byte(o, b);
+            pos++;
+            line_start = 0;
+            continue;
+        }
+        switch (b) {
+            case C0_FS:
+                if (!line_start) c0__sb_byte(o, '\n');
+                c0__sb_glyph(o, b);
+                pos++;
+                depth = 1;
+                pos = c0__p_data(buf, len, pos, o);
+                c0__sb_byte(o, '\n');
+                line_start = 1;
+                break;
+            case C0_GS: {
+                int run = 0, k;
+                while (pos < len && buf[pos] == C0_GS) {
+                    run++;
+                    pos++;
+                }
+                if (!line_start) c0__sb_byte(o, '\n');
+                c0__p_indent(o, indent, ilen, depth);
+                for (k = 0; k < run; k++) c0__sb_glyph(o, C0_GS);
+                pos = c0__p_data(buf, len, pos, o);
+                c0__sb_byte(o, '\n');
+                line_start = 1;
+                break;
+            }
+            case C0_SOH:
+                c0__p_indent(o, indent, ilen, depth + 1);
+                c0__sb_glyph(o, b);
+                pos++;
+                pos = c0__p_fields(buf, len, pos, o);
+                c0__sb_byte(o, '\n');
+                line_start = 1;
+                break;
+            case C0_RS:
+                c0__p_indent(o, indent, ilen, depth + 1);
+                c0__sb_glyph(o, b);
+                pos++;
+                pos = c0__p_fields(buf, len, pos, o);
+                c0__sb_byte(o, '\n');
+                line_start = 1;
+                break;
+            case C0_STX:
+                c0__sb_glyph(o, b);
+                pos++;
+                depth++;
+                c0__sb_byte(o, '\n');
+                line_start = 1;
+                break;
+            case C0_ETX:
+                if (depth > 0) depth--;
+                c0__p_indent(o, indent, ilen, depth + 1);
+                c0__sb_glyph(o, b);
+                pos++;
+                break;
+            case C0_EOT:
+                if (!line_start) c0__sb_byte(o, '\n');
+                c0__sb_glyph(o, b);
+                c0__sb_byte(o, '\n');
+                pos++;
+                line_start = 1;
+                break;
+            case C0_ENQ:
+                c0__sb_glyph(o, b);
+                pos++;
+                break;
+            case C0_DLE:
+                c0__sb_glyph(o, b);
+                pos++;
+                if (pos < len) {
+                    if (buf[pos] < 0x20) c0__sb_glyph(o, buf[pos]);
+                    else c0__sb_byte(o, buf[pos]);
+                    pos++;
+                }
+                break;
+            case C0_SUB:
+            case C0_US:
+                c0__sb_glyph(o, b);
+                pos++;
+                break;
+            case C0_ETB:
+                if (line_start) c0__p_indent(o, indent, ilen, depth + 1);
+                c0__sb_glyph(o, b);
+                pos++;
+                pos = c0__p_data(buf, len, pos, o);
+                c0__sb_byte(o, '\n');
+                line_start = 1;
+                break;
+            default:
+                c0__sb_glyph(o, b);
+                pos++;
+                break;
+        }
+    }
+    if (!line_start) c0__sb_byte(o, '\n');
+}
+
+char *c0_pretty_format(const uint8_t *buf, size_t len, const char *indent, size_t *outlen) {
+    c0__sb o;
+    const char *ind = indent ? indent : "  ";
+    size_t ilen = strlen(ind);
+    o.d = NULL;
+    o.n = 0;
+    o.cap = 0;
+    o.oom = 0;
+    c0__p_format(buf, len, ind, ilen, &o);
+    c0__sb_byte(&o, 0); /* NUL-terminate */
+    if (o.oom) {
+        free(o.d);
+        return NULL;
+    }
+    if (outlen) *outlen = o.n - 1;
+    return (char *)o.d;
+}
+
+/* Decode one UTF-8 codepoint at s[i]; *adv gets its byte length. */
+static unsigned c0__utf8(const uint8_t *s, size_t len, size_t i, size_t *adv) {
+    uint8_t c = s[i];
+    if (c < 0x80) {
+        *adv = 1;
+        return c;
+    } else if ((c >> 5) == 0x6 && i + 1 < len) {
+        *adv = 2;
+        return (unsigned)((c & 0x1F) << 6) | (s[i + 1] & 0x3F);
+    } else if ((c >> 4) == 0xE && i + 2 < len) {
+        *adv = 3;
+        return (unsigned)((c & 0x0F) << 12) | ((s[i + 1] & 0x3F) << 6) | (s[i + 2] & 0x3F);
+    } else if ((c >> 3) == 0x1E && i + 3 < len) {
+        *adv = 4;
+        return (unsigned)((c & 0x07) << 18) | ((s[i + 1] & 0x3F) << 12) |
+               ((s[i + 2] & 0x3F) << 6) | (s[i + 3] & 0x3F);
+    }
+    *adv = 1;
+    return c;
+}
+
+static size_t c0__p_quoted(const uint8_t *str, size_t len, size_t i, c0__sb *o) {
+    int depth = 1;
+    while (i < len) {
+        size_t adv;
+        unsigned cp = c0__utf8(str, len, i, &adv);
+        if (cp >= 0x2400 && cp <= 0x241F) {
+            uint8_t code = (uint8_t)(cp - 0x2400);
+            c0__sb_byte(o, code);
+            if (code == C0_STX) {
+                depth++;
+            } else if (code == C0_ETX) {
+                depth--;
+                if (depth == 0) {
+                    i += adv;
+                    break;
+                }
+            }
+            i += adv;
+        } else {
+            c0__sb_raw(o, str + i, adv);
+            i += adv;
+        }
+    }
+    return i;
+}
+
+uint8_t *c0_pretty_parse(const char *str_, size_t len, size_t *outlen) {
+    const uint8_t *str = (const uint8_t *)str_;
+    c0__sb o, ws;
+    size_t i = 0;
+    int trim_after = 1;
+    o.d = NULL; o.n = 0; o.cap = 0; o.oom = 0;
+    ws.d = NULL; ws.n = 0; ws.cap = 0; ws.oom = 0;
+
+    while (i < len) {
+        size_t adv;
+        unsigned cp = c0__utf8(str, len, i, &adv);
+        if (cp >= 0x2400 && cp <= 0x241F) {
+            uint8_t code = (uint8_t)(cp - 0x2400);
+            ws.n = 0;
+            c0__sb_byte(&o, code);
+            i += adv;
+            if (code == C0_STX) i = c0__p_quoted(str, len, i, &o);
+            trim_after = 1;
+        } else if (cp == '\n' || cp == '\r') {
+            ws.n = 0;
+            trim_after = 1;
+            i += adv;
+        } else if (cp == ' ' || cp == '\t') {
+            if (trim_after) {
+                i += adv;
+                continue;
+            }
+            c0__sb_byte(&ws, (uint8_t)cp);
+            i += adv;
+        } else {
+            trim_after = 0;
+            if (ws.n) {
+                c0__sb_raw(&o, ws.d, ws.n);
+                ws.n = 0;
+            }
+            c0__sb_raw(&o, str + i, adv);
+            i += adv;
+        }
+    }
+
+    free(ws.d);
+    if (o.oom) {
+        free(o.d);
+        return NULL;
+    }
+    if (!o.d) o.d = (uint8_t *)malloc(1); /* non-NULL even when empty */
+    if (outlen) *outlen = o.n;
+    return o.d;
 }
 
 #endif /* C0_IMPLEMENTATION */

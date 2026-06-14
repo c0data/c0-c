@@ -55,17 +55,21 @@ Core (single-header) — done and tested:
 - canonical-form helpers (`c0_canonical`, `c0_unescape`, `c0_is_assigned`)
 - ETB stream mode (`c0_stream_read`: committed region, torn-tail detection,
   block cursor)
+- pretty (Unicode Control Pictures): `c0_pretty_format` / `c0_pretty_parse`
+- passes the shared conformance vectors
 
-Planned: pretty (Unicode Control Pictures) formatting, the shared conformance
-vectors, and the converters (CSV / JSON / C0DIFF) as separate `.c` files.
+Planned: the converters (CSV / JSON / C0DIFF) as separate `.c` files.
 
 ## Build & test
 
 ```sh
-make test
+make test    # builds and runs the unit + conformance tests
+make gen     # regenerate the conformance driver from vectors (needs python3)
 ```
 
-Compiles with `-std=c99 -Wall -Wextra -Wpedantic`.
+Compiles with `-std=c99 -Wall -Wextra -Wpedantic`. The conformance driver
+(`tests/vectors_gen.h`) is generated from the shared vectors and checked in, so
+`make test` needs no Python.
 
 ## License
 

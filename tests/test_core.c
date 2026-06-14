@@ -298,6 +298,51 @@ static void test_stream(void) {
     }
 }
 
+static void test_pretty(void) {
+    c0_builder b;
+    c0_bytes buf;
+    char *p;
+    size_t plen, blen;
+    uint8_t *back;
+
+    c0_builder_init(&b);
+    c0_build_group_str(&b, "users");
+    {
+        const char *hs[] = {"name", "amount"};
+        c0_build_headers_str(&b, hs, 2);
+    }
+    {
+        const char *r[] = {"Alice", "100"};
+        c0_build_record_str(&b, r, 2);
+    }
+    buf = c0_builder_bytes(&b);
+
+    p = c0_pretty_format(buf.ptr, buf.len, NULL, &plen);
+    CHECK(p != NULL);
+    /* the RS glyph U+241E encodes as E2 90 9E */
+    CHECK(strstr(p, "\xe2\x90\x9e") != NULL);
+    back = c0_pretty_parse(p, plen, &blen);
+    CHECK(back != NULL);
+    CHECK(blen == buf.len && memcmp(back, buf.ptr, blen) == 0);
+    free(p);
+    free(back);
+    c0_builder_free(&b);
+
+    /* ETB renders (U+2417 => E2 90 97) and round-trips */
+    {
+        const uint8_t in[] = "\x1e" "create" "\x1f" "a1b2" "\x17";
+        char *pp;
+        uint8_t *bb;
+        size_t pl, bl;
+        pp = c0_pretty_format(in, sizeof(in) - 1, NULL, &pl);
+        CHECK(pp != NULL && strstr(pp, "\xe2\x90\x97") != NULL);
+        bb = c0_pretty_parse(pp, pl, &bl);
+        CHECK(bb != NULL && bl == sizeof(in) - 1 && memcmp(bb, in, bl) == 0);
+        free(pp);
+        free(bb);
+    }
+}
+
 int main(void) {
     test_tokenizer();
     test_unescape();
@@ -307,6 +352,7 @@ int main(void) {
     test_etb_tolerance();
     test_builder();
     test_stream();
+    test_pretty();
     if (failures) {
         printf("%d failure(s)\n", failures);
         return 1;

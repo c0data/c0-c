@@ -1,2 +1,3 @@
 /tests/test_core
+/tests/test_conformance
 *.o
