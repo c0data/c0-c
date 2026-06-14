@@ -69,7 +69,14 @@ make gen     # regenerate the conformance driver from vectors (needs python3)
 
 Compiles with `-std=c99 -Wall -Wextra -Wpedantic`. The conformance driver
 (`tests/vectors_gen.h`) is generated from the shared vectors and checked in, so
-`make test` needs no Python.
+`make test` needs neither Python nor the submodule. The vectors come from
+[c0-spec](https://github.com/trans/c0-spec), included as a git submodule at
+`c0-spec/` and only needed when regenerating:
+
+```sh
+git submodule update --init   # once after cloning
+make gen                      # regenerate tests/vectors_gen.h
+```
 
 ## License
 

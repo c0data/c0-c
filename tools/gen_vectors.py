@@ -9,7 +9,7 @@ import json
 import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-VEC = os.path.join(HERE, "..", "tests", "conformance")
+VEC = os.path.join(HERE, "..", "c0-spec", "vectors")
 OUT = os.path.join(HERE, "..", "tests", "vectors_gen.h")
 
 _gid = [0]
