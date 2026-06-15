@@ -1,6 +1,6 @@
 # c0
 
-A C implementation of [C0DATA](https://github.com/c0data/c0-cr) — structured
+A C implementation of [C0DATA](https://github.com/c0data) — structured
 data built on ASCII C0 control codes. Single-header, C99, no dependencies
 beyond libc.
 
