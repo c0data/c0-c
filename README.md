@@ -1,6 +1,6 @@
 # c0
 
-A C implementation of [C0DATA](https://github.com/trans/c0data) — structured
+A C implementation of [C0DATA](https://github.com/c0data/c0-cr) — structured
 data built on ASCII C0 control codes. Single-header, C99, no dependencies
 beyond libc.
 
@@ -70,7 +70,7 @@ make gen     # regenerate the conformance driver from vectors (needs python3)
 Compiles with `-std=c99 -Wall -Wextra -Wpedantic`. The conformance driver
 (`tests/vectors_gen.h`) is generated from the shared vectors and checked in, so
 `make test` needs neither Python nor the submodule. The vectors come from
-[c0-spec](https://github.com/trans/c0-spec), included as a git submodule at
+[c0-spec](https://github.com/c0data/c0-spec), included as a git submodule at
 `c0-spec/` and only needed when regenerating:
 
 ```sh
