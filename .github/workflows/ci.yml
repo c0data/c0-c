@@ -13,6 +13,6 @@ jobs:
         with:
           submodules: recursive   # conformance vectors live in the c0-spec submodule
       - name: Conformance header is in sync with the vectors
-        run: make gen && git diff --exit-status tests/vectors_gen.h
+        run: make gen && git diff --exit-code -- tests/vectors_gen.h
       - name: Test
         run: make test
