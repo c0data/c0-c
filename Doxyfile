@@ -1,0 +1,15 @@
+PROJECT_NAME           = "c0"
+PROJECT_BRIEF          = "C0DATA — structured data using ASCII C0 control codes (C)"
+OUTPUT_DIRECTORY       =
+GENERATE_HTML          = YES
+HTML_OUTPUT            = docs
+GENERATE_LATEX         = NO
+INPUT                  = c0.h
+FILE_PATTERNS          = *.h
+OPTIMIZE_OUTPUT_FOR_C  = YES
+EXTRACT_ALL            = YES
+JAVADOC_AUTOBRIEF      = YES
+HAVE_DOT               = NO
+GENERATE_TREEVIEW      = YES
+QUIET                  = YES
+WARN_IF_UNDOCUMENTED   = NO

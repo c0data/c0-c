@@ -25,26 +25,26 @@ extern "C" {
 #endif
 
 /* Assigned C0 control codes. */
-#define C0_SOH 0x01 /* Header (field name declarations)            */
-#define C0_STX 0x02 /* Open nested sub-structure / reference scope */
-#define C0_ETX 0x03 /* Close nested sub-structure / reference scope*/
-#define C0_EOT 0x04 /* End of document / message                   */
-#define C0_ENQ 0x05 /* Reference (enquiry)                         */
-#define C0_DLE 0x10 /* Escape (next byte is literal)               */
-#define C0_ETB 0x17 /* Commit marker (stream mode)                 */
-#define C0_SUB 0x1a /* Substitution (C0-DIFF)                      */
-#define C0_FS  0x1c /* File / Database separator                   */
-#define C0_GS  0x1d /* Group / Table / Section separator           */
-#define C0_RS  0x1e /* Record / Row separator                      */
-#define C0_US  0x1f /* Unit / Field separator                      */
+#define C0_SOH 0x01 /**< Header (field name declarations)            */
+#define C0_STX 0x02 /**< Open nested sub-structure / reference scope */
+#define C0_ETX 0x03 /**< Close nested sub-structure / reference scope*/
+#define C0_EOT 0x04 /**< End of document / message                   */
+#define C0_ENQ 0x05 /**< Reference (enquiry)                         */
+#define C0_DLE 0x10 /**< Escape (next byte is literal)               */
+#define C0_ETB 0x17 /**< Commit marker (stream mode)                 */
+#define C0_SUB 0x1a /**< Substitution (C0-DIFF)                      */
+#define C0_FS  0x1c /**< File / Database separator                   */
+#define C0_GS  0x1d /**< Group / Table / Section separator           */
+#define C0_RS  0x1e /**< Record / Row separator                      */
+#define C0_US  0x1f /**< Unit / Field separator                      */
 
-/* A zero-copy view into a buffer: not NUL-terminated. */
+/** A zero-copy view into a buffer: not NUL-terminated. */
 typedef struct {
     const uint8_t *ptr;
     size_t len;
 } c0_bytes;
 
-/* Token kinds. DLE is consumed during tokenization, never emitted. */
+/** Token kinds. DLE is consumed during tokenization, never emitted. */
 typedef enum {
     C0_TOK_DATA = 0,
     C0_TOK_SOH,
@@ -62,18 +62,18 @@ typedef enum {
 
 typedef struct {
     c0_token_type type;
-    size_t start; /* byte offset into the buffer */
-    size_t end;   /* exclusive */
+    size_t start; /**< byte offset into the buffer */
+    size_t end;   /**< exclusive */
 } c0_token;
 
-/* Tokenizer errors. */
+/** Tokenizer errors. */
 typedef enum {
     C0_OK = 0,
-    C0_ERR_UNASSIGNED,     /* a control byte (< 0x20) that is not assigned */
-    C0_ERR_UNEXPECTED_END  /* input ended right after a DLE escape         */
+    C0_ERR_UNASSIGNED,     /**< a control byte (< 0x20) that is not assigned */
+    C0_ERR_UNEXPECTED_END  /**< input ended right after a DLE escape         */
 } c0_status;
 
-/* Result of advancing a cursor. */
+/** Result of advancing a cursor. */
 typedef enum {
     C0_END = 0,
     C0_TOKEN = 1,
@@ -89,20 +89,20 @@ typedef struct {
 
 /* --- Bytewise helpers --- */
 
-/* Whether a byte is an assigned C0 control code. */
+/** Whether a byte is an assigned C0 control code. */
 int c0_is_assigned(uint8_t byte);
 
-/*
+/**
  * Decode DLE escapes from `in`, writing the logical bytes to `out`. `out` must
  * have room for `len` bytes (decoding never grows). Returns the logical length.
  * A trailing DLE with nothing to escape (only on malformed input) is dropped.
  */
 size_t c0_unescape(const uint8_t *in, size_t len, uint8_t *out);
 
-/* Whether `in` contains any DLE escape (i.e. whether unescaping would copy). */
+/** Whether `in` contains any DLE escape (i.e. whether unescaping would copy). */
 int c0_has_escape(const uint8_t *in, size_t len);
 
-/*
+/**
  * Whether bytes are a canonical document unit for content addressing:
  * well-formed, minimally escaped (DLE only before bytes < 0x20), and free of
  * framing bytes (ETB, EOT). Stream logs validate per block, not with this.
@@ -113,7 +113,7 @@ int c0_canonical(const uint8_t *in, size_t len);
 
 void c0_tokenizer_init(c0_tokenizer *tz, const uint8_t *buf, size_t len);
 
-/*
+/**
  * Advance to the next token. Returns C0_TOKEN and fills *out, C0_END at the end
  * of input, or C0_ERROR (with tz->error set) on malformed input.
  */
@@ -121,38 +121,38 @@ c0_step c0_tokenizer_next(c0_tokenizer *tz, c0_token *out);
 
 /* --- Readers (zero-copy cursors) --- */
 
-/* A group/table: a byte range beginning at its GS (or a bare buffer). */
+/** A group/table: a byte range beginning at its GS (or a bare buffer). */
 typedef struct {
     const uint8_t *buf;
     size_t start;
     size_t end;
 } c0_group;
 
-/* A whole buffer as one group/table (no enclosing FS). */
+/** A whole buffer as one group/table (no enclosing FS). */
 c0_group c0_table(const uint8_t *buf, size_t len);
 
-/* Group/table name (text after GS); empty for a bare buffer. */
+/** Group/table name (text after GS); empty for a bare buffer. */
 c0_bytes c0_group_name(c0_group g);
 
-/* Whether the group has an SOH header. */
+/** Whether the group has an SOH header. */
 int c0_group_has_header(c0_group g);
 
-/* A forward cursor over a byte range. */
+/** A forward cursor over a byte range. */
 typedef struct {
     const uint8_t *buf;
     size_t pos;
     size_t end;
 } c0_iter;
 
-/* Header field cursor (identifier segments, US-separated). */
+/** Header field cursor (identifier segments, US-separated). */
 c0_iter c0_group_headers(c0_group g);
 int c0_next_header(c0_iter *it, c0_bytes *out);
 
-/* Record cursor: each *rec is a record's field-bytes (the RS is excluded). */
+/** Record cursor: each *rec is a record's field-bytes (the RS is excluded). */
 c0_iter c0_group_records(c0_group g);
 int c0_next_record(c0_iter *it, c0_bytes *rec);
 
-/* Field cursor within a record. Yields N+1 fields for N separators; respects
+/** Field cursor within a record. Yields N+1 fields for N separators; respects
  * DLE escaping and STX/ETX nesting (fields are raw — use c0_unescape). */
 typedef struct {
     const uint8_t *buf;
@@ -163,10 +163,10 @@ typedef struct {
 c0_field_iter c0_record_fields(c0_bytes rec);
 int c0_next_field(c0_field_iter *it, c0_bytes *out);
 
-/* Document: file name (text after FS), empty if none. */
+/** Document: file name (text after FS), empty if none. */
 c0_bytes c0_doc_name(const uint8_t *buf, size_t len);
 
-/* Document cursor over top-level groups (single GS; GS*N sections are nested
+/** Document cursor over top-level groups (single GS; GS*N sections are nested
  * within their parent group's range). */
 typedef struct {
     const uint8_t *buf;
@@ -179,10 +179,10 @@ int c0_next_group(c0_doc_iter *it, c0_group *out);
 /* --- Builder (writer) --- */
 
 #define C0_BUILD_OK 0
-#define C0_BUILD_OOM 1       /* allocation failed */
-#define C0_BUILD_BAD_NAME 2  /* a control byte was passed where a name is required */
+#define C0_BUILD_OOM 1       /**< allocation failed */
+#define C0_BUILD_BAD_NAME 2  /**< a control byte was passed where a name is required */
 
-/* Owns a growable output buffer; call c0_builder_free when done. Once an error
+/** Owns a growable output buffer; call c0_builder_free when done. Once an error
  * is set, further writes are no-ops; check c0_builder_status before using the
  * bytes. Names (file/group/header) reject control bytes; record field values
  * are byte-transparent and DLE-escaped automatically. */
@@ -205,7 +205,7 @@ void c0_build_record(c0_builder *b, const c0_bytes *fields, size_t count);
 void c0_build_eot(c0_builder *b);
 void c0_build_etb(c0_builder *b);
 
-/* NUL-terminated convenience wrappers (cannot carry embedded NUL/binary). */
+/** NUL-terminated convenience wrappers (cannot carry embedded NUL/binary). */
 void c0_build_file_str(c0_builder *b, const char *name);
 void c0_build_group_str(c0_builder *b, const char *name);
 void c0_build_headers_str(c0_builder *b, const char *const *names, size_t count);
@@ -213,7 +213,7 @@ void c0_build_record_str(c0_builder *b, const char *const *fields, size_t count)
 
 /* --- Stream mode (ETB commits) --- */
 
-/* A view over an append-only log. `committed_end` is the offset past the last
+/** A view over an append-only log. `committed_end` is the offset past the last
  * commit marker; `torn` is set when uncommitted bytes trail it (residue of an
  * interrupted append — to be skipped on replay, and truncated before the next
  * append). A block is complete iff terminated by ETB. */
@@ -228,7 +228,7 @@ c0_stream c0_stream_read(const uint8_t *buf, size_t len);
 c0_bytes c0_stream_committed(const c0_stream *s);
 c0_bytes c0_stream_tail(const c0_stream *s);
 
-/* Committed-block cursor (block = bytes between commits, ETB + payload
+/** Committed-block cursor (block = bytes between commits, ETB + payload
  * excluded). The committed region also reads directly as a table via
  * c0_table(c0_stream_committed(s)...). */
 typedef struct {
@@ -242,7 +242,7 @@ int c0_next_block(c0_block_iter *it, c0_bytes *out);
 
 /* --- Pretty (Unicode Control Pictures, U+2400 block) --- */
 
-/*
+/**
  * Format compact bytes as a human-readable UTF-8 string (compact layout).
  * Returns a malloc'd, NUL-terminated string the caller frees; *outlen (if not
  * NULL) gets the byte length excluding the NUL. `indent` defaults to "  " when
@@ -250,7 +250,7 @@ int c0_next_block(c0_block_iter *it, c0_bytes *out);
  */
 char *c0_pretty_format(const uint8_t *buf, size_t len, const char *indent, size_t *outlen);
 
-/*
+/**
  * Parse pretty text back to compact bytes. Returns a malloc'd buffer the caller
  * frees; *outlen (if not NULL) gets the length. Returns NULL on allocation
  * failure.
@@ -261,7 +261,7 @@ uint8_t *c0_pretty_parse(const char *str, size_t len, size_t *outlen);
 }
 #endif
 
-/* ====================================================================== */
+/** ====================================================================== */
 #ifdef C0_IMPLEMENTATION
 
 #include <stdlib.h>
