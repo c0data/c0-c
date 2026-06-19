@@ -1,4 +1,5 @@
-/tests/test_core
-/tests/test_conformance
+/tests/test_*
+!/tests/test_*.c
+!/tests/test_*.h
 *.o
 docs/

@@ -58,7 +58,18 @@ Core (single-header) — done and tested:
 - pretty (Unicode Control Pictures): `c0_pretty_format` / `c0_pretty_parse`
 - passes the shared conformance vectors
 
-Planned: the converters (CSV / JSON / C0DIFF) as separate `.c` files.
+Converters — separate `.c` files that `#include "c0.h"`, compiled in only when
+you need them (the core header stays dependency-free):
+
+- `c0_csv.{h,c}` — `c0_from_csv` / `c0_to_csv` (RFC-4180 quoting)
+- `c0_json.{h,c}` — a `c0_value` tree plus `c0_to_value` / `c0_from_value` and a
+  dependency-free JSON text codec (`c0_to_json` / `c0_from_json`,
+  `c0_json_parse` / `c0_json_print`); scalars are strings, as in the reference
+  implementations
+- `c0_diff.{h,c}` — C0DIFF parse / build / atomic `c0_diff_apply`
+
+Each shares the tiny `c0_strbuf.h` growable-buffer helper. The converters emit
+byte-identical output to the Crystal and Rust reference implementations.
 
 ## Build & test
 
