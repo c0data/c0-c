@@ -248,6 +248,274 @@ static void test_builder(void) {
     }
 }
 
+static int item_count(c0_bytes field) {
+    c0_list_iter li = c0_field_items(field);
+    c0_bytes item;
+    int n = 0;
+    while (c0_next_item(&li, &item)) n++;
+    return n;
+}
+
+static void test_list_field(void) {
+    c0_builder b;
+    c0_bytes out, rec, f, item;
+    c0_group g;
+    c0_iter ri;
+    c0_list_iter li;
+
+    /* GS users RS Alice US STX Admin US Editor US User ETX US 1502.30 */
+    c0_builder_init(&b);
+    c0_build_group_str(&b, "users");
+    {
+        const char *r[] = {"Alice"};
+        const char *roles[] = {"Admin", "Editor", "User"};
+        c0_build_record_str(&b, r, 1);
+        c0_build_list_field_str(&b, roles, 3);
+        c0_build_field_str(&b, "1502.30");
+    }
+    CHECK(c0_builder_status(&b) == C0_BUILD_OK);
+    out = c0_builder_bytes(&b);
+    {
+        const uint8_t want[] =
+            "\x1d" "users" "\x1e" "Alice"
+            "\x1f" "\x02" "Admin" "\x1f" "Editor" "\x1f" "User" "\x03"
+            "\x1f" "1502.30";
+        CHECK(out.len == sizeof(want) - 1 && memcmp(out.ptr, want, out.len) == 0);
+    }
+    CHECK(c0_canonical(out.ptr, out.len));
+
+    g = c0_table(out.ptr, out.len);
+    ri = c0_group_records(g);
+    CHECK(c0_next_record(&ri, &rec));
+    CHECK(field_count(rec) == 3);
+    CHECK(field_n(rec, 0, &f) && beq(f, "Alice"));
+    CHECK(field_n(rec, 2, &f) && beq(f, "1502.30"));
+    CHECK(field_n(rec, 1, &f));
+    li = c0_field_items(f);
+    CHECK(c0_next_item(&li, &item) && beq(item, "Admin"));
+    CHECK(c0_next_item(&li, &item) && beq(item, "Editor"));
+    CHECK(c0_next_item(&li, &item) && beq(item, "User"));
+    CHECK(!c0_next_item(&li, &item));
+    CHECK(!c0_next_record(&ri, &rec));
+    c0_builder_free(&b);
+
+    /* Items with control bytes (US, STX) are escaped and round-trip. */
+    {
+        c0_builder b2;
+        c0_bytes items[2];
+        uint8_t dec[8];
+        size_t dn;
+        c0_builder_init(&b2);
+        c0_build_group_str(&b2, "g");
+        {
+            const char *r[] = {"x"};
+            c0_build_record_str(&b2, r, 1);
+        }
+        items[0].ptr = (const uint8_t *)"a" "\x1f" "b";
+        items[0].len = 3;
+        items[1].ptr = (const uint8_t *)"c" "\x02" "d";
+        items[1].len = 3;
+        c0_build_list_field(&b2, items, 2);
+        CHECK(c0_builder_status(&b2) == C0_BUILD_OK);
+        out = c0_builder_bytes(&b2);
+        {
+            const uint8_t want[] =
+                "\x1d" "g" "\x1e" "x"
+                "\x1f" "\x02" "a" "\x10\x1f" "b" "\x1f" "c" "\x10\x02" "d" "\x03";
+            CHECK(out.len == sizeof(want) - 1 && memcmp(out.ptr, want, out.len) == 0);
+        }
+        g = c0_table(out.ptr, out.len);
+        ri = c0_group_records(g);
+        CHECK(c0_next_record(&ri, &rec));
+        CHECK(field_count(rec) == 2);
+        CHECK(field_n(rec, 1, &f));
+        CHECK(item_count(f) == 2);
+        li = c0_field_items(f);
+        CHECK(c0_next_item(&li, &item));
+        dn = c0_unescape(item.ptr, item.len, dec);
+        CHECK(dn == 3 && dec[0] == 'a' && dec[1] == 0x1f && dec[2] == 'b');
+        CHECK(c0_next_item(&li, &item));
+        dn = c0_unescape(item.ptr, item.len, dec);
+        CHECK(dn == 3 && dec[0] == 'c' && dec[1] == 0x02 && dec[2] == 'd');
+        CHECK(!c0_next_item(&li, &item));
+        c0_builder_free(&b2);
+    }
+
+    /* An empty list is US STX ETX and reads back as zero items. */
+    {
+        c0_builder b3;
+        c0_builder_init(&b3);
+        {
+            const char *r[] = {"x"};
+            c0_build_record_str(&b3, r, 1);
+        }
+        c0_build_list_field(&b3, NULL, 0);
+        out = c0_builder_bytes(&b3);
+        CHECK(out.len == 5 && memcmp(out.ptr, "\x1e" "x" "\x1f\x02\x03", 5) == 0);
+        g = c0_table(out.ptr, out.len);
+        ri = c0_group_records(g);
+        CHECK(c0_next_record(&ri, &rec));
+        CHECK(field_count(rec) == 2);
+        CHECK(field_n(rec, 1, &f) && f.len == 2);
+        CHECK(item_count(f) == 0);
+        c0_builder_free(&b3);
+    }
+
+    /* A nested scope inside an item is kept intact (its US is not a split). */
+    {
+        const uint8_t in[] =
+            "\x02" "a" "\x02" "x" "\x1f" "y" "\x03" "b" "\x1f" "c" "\x03";
+        f.ptr = in;
+        f.len = sizeof(in) - 1;
+        CHECK(item_count(f) == 2);
+        li = c0_field_items(f);
+        CHECK(c0_next_item(&li, &item));
+        CHECK(item.len == 7 && memcmp(item.ptr, "a" "\x02" "x" "\x1f" "y" "\x03" "b", 7) == 0);
+        CHECK(c0_next_item(&li, &item) && beq(item, "c"));
+        CHECK(!c0_next_item(&li, &item));
+    }
+
+    /* A plain (non-scope) field yields itself as a single item. */
+    {
+        f.ptr = (const uint8_t *)"Alice";
+        f.len = 5;
+        CHECK(item_count(f) == 1);
+        li = c0_field_items(f);
+        CHECK(c0_next_item(&li, &item) && beq(item, "Alice"));
+        CHECK(!c0_next_item(&li, &item));
+
+        f.len = 0; /* an empty plain field is one empty item */
+        li = c0_field_items(f);
+        CHECK(c0_next_item(&li, &item) && item.len == 0);
+        CHECK(!c0_next_item(&li, &item));
+    }
+
+    /* A scope whose ETX is missing (malformed) still splits its items. */
+    {
+        const uint8_t in[] = "\x02" "p" "\x1f" "q";
+        f.ptr = in;
+        f.len = sizeof(in) - 1;
+        li = c0_field_items(f);
+        CHECK(c0_next_item(&li, &item) && beq(item, "p"));
+        CHECK(c0_next_item(&li, &item) && beq(item, "q"));
+        CHECK(!c0_next_item(&li, &item));
+    }
+}
+
+static void test_builder_writers(void) {
+    c0_builder b;
+    c0_bytes out;
+
+    /* Byte-level smoke test of each writer, in the order written. */
+    c0_builder_init(&b);
+    c0_build_file_str(&b, "db");
+    c0_build_section_str(&b, "intro", 2);
+    c0_build_block_str(&b, "line" "\x1e" "1");
+    c0_build_item_str(&b, "it" "\x1f" "em");
+    c0_build_group_str(&b, "orders");
+    {
+        const char *r[] = {"1"};
+        c0_build_record_str(&b, r, 1);
+    }
+    c0_build_ref_str(&b, "users");
+    {
+        const char *path[] = {"users", "1", "name"};
+        c0_build_ref_path_str(&b, path, 3);
+    }
+    c0_build_field_str(&b, "v" "\x02" "w");
+    c0_build_nested_open(&b);
+    c0_build_field_str(&b, "inner");
+    c0_build_nested_close(&b);
+    c0_build_etb_payload_str(&b, "a1b2");
+    c0_build_etb(&b);
+    c0_build_eot(&b);
+    CHECK(c0_builder_status(&b) == C0_BUILD_OK);
+    out = c0_builder_bytes(&b);
+    {
+        const uint8_t want[] =
+            "\x1c" "db"
+            "\x1d\x1d" "intro"
+            "\x1e" "line" "\x10\x1e" "1"
+            "\x1f" "it" "\x10\x1f" "em"
+            "\x1d" "orders"
+            "\x1e" "1"
+            "\x05" "users"
+            "\x05\x02" "users" "\x1f" "1" "\x1f" "name" "\x03"
+            "\x1f" "v" "\x10\x02" "w"
+            "\x02" "\x1f" "inner" "\x03"
+            "\x17" "a1b2"
+            "\x17"
+            "\x04";
+        CHECK(out.len == sizeof(want) - 1 && memcmp(out.ptr, want, out.len) == 0);
+    }
+    c0_builder_free(&b);
+
+    /* (ptr,len) forms carry binary. */
+    {
+        c0_builder b2;
+        c0_builder_init(&b2);
+        c0_build_section(&b2, (const uint8_t *)"s", 1, 1);
+        c0_build_block(&b2, (const uint8_t *)"\x00" "t", 2);
+        c0_build_item(&b2, (const uint8_t *)"i", 1);
+        c0_build_field(&b2, (const uint8_t *)"f", 1);
+        c0_build_ref(&b2, (const uint8_t *)"r", 1);
+        {
+            c0_bytes segs[2];
+            segs[0].ptr = (const uint8_t *)"g";
+            segs[0].len = 1;
+            segs[1].ptr = (const uint8_t *)"id";
+            segs[1].len = 2;
+            c0_build_ref_path(&b2, segs, 2);
+        }
+        c0_build_etb_payload(&b2, (const uint8_t *)"p", 1);
+        CHECK(c0_builder_status(&b2) == C0_BUILD_OK);
+        out = c0_builder_bytes(&b2);
+        {
+            const uint8_t want[] =
+                "\x1d" "s" "\x1e" "\x10\x00" "t" "\x1f" "i" "\x1f" "f"
+                "\x05" "r" "\x05\x02" "g" "\x1f" "id" "\x03" "\x17" "p";
+            CHECK(out.len == sizeof(want) - 1 && memcmp(out.ptr, want, out.len) == 0);
+        }
+        c0_builder_free(&b2);
+    }
+
+    /* Section and ref names, and ref path segments, reject control bytes. */
+    {
+        c0_builder b3;
+        c0_builder_init(&b3);
+        c0_build_section_str(&b3, "a" "\x1f" "b", 1);
+        CHECK(c0_builder_status(&b3) == C0_BUILD_BAD_NAME);
+        c0_builder_free(&b3);
+
+        c0_builder_init(&b3);
+        c0_build_ref_str(&b3, "a" "\x1f" "b");
+        CHECK(c0_builder_status(&b3) == C0_BUILD_BAD_NAME);
+        c0_builder_free(&b3);
+
+        c0_builder_init(&b3);
+        {
+            const char *path[] = {"ok", "b" "\x02" "ad"};
+            c0_build_ref_path_str(&b3, path, 2);
+        }
+        CHECK(c0_builder_status(&b3) == C0_BUILD_BAD_NAME);
+        c0_builder_free(&b3);
+    }
+
+    /* An ETB payload with a control byte sets C0_BUILD_BAD_PAYLOAD; later
+       writes are no-ops. */
+    {
+        c0_builder b4;
+        size_t before;
+        c0_builder_init(&b4);
+        c0_build_etb_payload_str(&b4, "a" "\x1f" "b");
+        CHECK(c0_builder_status(&b4) == C0_BUILD_BAD_PAYLOAD);
+        before = c0_builder_bytes(&b4).len;
+        c0_build_eot(&b4);
+        CHECK(c0_builder_bytes(&b4).len == before);
+        c0_builder_free(&b4);
+    }
+}
+
 static int count_records(c0_bytes committed) {
     c0_group g = c0_table(committed.ptr, committed.len);
     c0_iter ri = c0_group_records(g);
@@ -351,6 +619,8 @@ int main(void) {
     test_document_reader();
     test_etb_tolerance();
     test_builder();
+    test_list_field();
+    test_builder_writers();
     test_stream();
     test_pretty();
     if (failures) {

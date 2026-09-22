@@ -163,6 +163,22 @@ typedef struct {
 c0_field_iter c0_record_fields(c0_bytes rec);
 int c0_next_field(c0_field_iter *it, c0_bytes *out);
 
+/** Item cursor over a list field (the inverse of c0_build_list_field). Given a
+ * raw field as yielded by c0_next_field: if it is an STX/ETX scope, the
+ * leading STX and trailing ETX are stripped and the items are split on
+ * top-level US (DLE escapes and nested STX/ETX scopes are skipped); an empty
+ * scope yields zero items. A field that is not a scope yields itself as a
+ * single item. Items are raw — use c0_unescape. */
+typedef struct {
+    const uint8_t *buf;
+    size_t pos;
+    size_t end;
+    int whole; /**< not a scope: yield the whole field once */
+    int done;
+} c0_list_iter;
+c0_list_iter c0_field_items(c0_bytes field);
+int c0_next_item(c0_list_iter *it, c0_bytes *out);
+
 /** Document: file name (text after FS), empty if none. */
 c0_bytes c0_doc_name(const uint8_t *buf, size_t len);
 
@@ -181,11 +197,13 @@ int c0_next_group(c0_doc_iter *it, c0_group *out);
 #define C0_BUILD_OK 0
 #define C0_BUILD_OOM 1       /**< allocation failed */
 #define C0_BUILD_BAD_NAME 2  /**< a control byte was passed where a name is required */
+#define C0_BUILD_BAD_PAYLOAD 3 /**< a control byte was passed in an ETB payload */
 
 /** Owns a growable output buffer; call c0_builder_free when done. Once an error
  * is set, further writes are no-ops; check c0_builder_status before using the
- * bytes. Names (file/group/header) reject control bytes; record field values
- * are byte-transparent and DLE-escaped automatically. */
+ * bytes. Names (file/group/section/header/ref) reject control bytes; field
+ * values (record/field/list_field/block/item) are byte-transparent and
+ * DLE-escaped automatically. */
 typedef struct {
     uint8_t *data;
     size_t len;
@@ -205,11 +223,54 @@ void c0_build_record(c0_builder *b, const c0_bytes *fields, size_t count);
 void c0_build_eot(c0_builder *b);
 void c0_build_etb(c0_builder *b);
 
+/** ETB commit marker followed by an integrity payload. The payload may not
+ * contain control bytes (it is terminated by the next control code on read);
+ * one sets C0_BUILD_BAD_PAYLOAD. */
+void c0_build_etb_payload(c0_builder *b, const uint8_t *payload, size_t plen);
+
+/** Nested sub-structure: STX ... ETX around content the caller writes between
+ * the two calls. */
+void c0_build_nested_open(c0_builder *b);
+void c0_build_nested_close(c0_builder *b);
+
+/** Reference to a named group: ENQ + name. */
+void c0_build_ref(c0_builder *b, const uint8_t *name, size_t nlen);
+
+/** Path reference (group, record id, optional field): ENQ STX segments joined
+ * by US ETX. Segments are names. */
+void c0_build_ref_path(c0_builder *b, const c0_bytes *segments, size_t count);
+
+/** A field whose value is a flat list (spec: "arrays are US-separated values
+ * inside STX/ETX"): US STX items joined by US ETX, each item DLE-escaped. Read
+ * back with c0_field_items. */
+void c0_build_list_field(c0_builder *b, const c0_bytes *items, size_t count);
+
+/** A single field: US + escaped value (for building records field by field
+ * after a c0_build_record). */
+void c0_build_field(c0_builder *b, const uint8_t *value, size_t vlen);
+
+/** Document-mode section: GS x depth + name. */
+void c0_build_section(c0_builder *b, const uint8_t *name, size_t nlen, size_t depth);
+
+/** Document-mode content block: RS + escaped text. */
+void c0_build_block(c0_builder *b, const uint8_t *text, size_t tlen);
+
+/** Document-mode list item: US + escaped text. */
+void c0_build_item(c0_builder *b, const uint8_t *text, size_t tlen);
+
 /** NUL-terminated convenience wrappers (cannot carry embedded NUL/binary). */
 void c0_build_file_str(c0_builder *b, const char *name);
 void c0_build_group_str(c0_builder *b, const char *name);
 void c0_build_headers_str(c0_builder *b, const char *const *names, size_t count);
 void c0_build_record_str(c0_builder *b, const char *const *fields, size_t count);
+void c0_build_etb_payload_str(c0_builder *b, const char *payload);
+void c0_build_ref_str(c0_builder *b, const char *name);
+void c0_build_ref_path_str(c0_builder *b, const char *const *segments, size_t count);
+void c0_build_list_field_str(c0_builder *b, const char *const *items, size_t count);
+void c0_build_field_str(c0_builder *b, const char *value);
+void c0_build_section_str(c0_builder *b, const char *name, size_t depth);
+void c0_build_block_str(c0_builder *b, const char *text);
+void c0_build_item_str(c0_builder *b, const char *text);
 
 /* --- Stream mode (ETB commits) --- */
 
@@ -560,6 +621,54 @@ int c0_next_field(c0_field_iter *it, c0_bytes *out) {
     return 1;
 }
 
+c0_list_iter c0_field_items(c0_bytes field) {
+    c0_list_iter it;
+    it.buf = field.ptr;
+    it.done = 0;
+    if (field.len == 0 || field.ptr[0] != C0_STX) {
+        it.pos = 0;
+        it.end = field.len;
+        it.whole = 1;
+    } else {
+        size_t stop = field.len;
+        if (stop > 1 && field.ptr[stop - 1] == C0_ETX) stop--;
+        it.pos = 1;
+        it.end = stop;
+        it.whole = 0;
+        if (stop <= 1) it.done = 1; /* empty scope: no items */
+    }
+    return it;
+}
+
+int c0_next_item(c0_list_iter *it, c0_bytes *out) {
+    size_t s, e;
+    if (it->done) return 0;
+    s = it->pos;
+    if (it->whole) {
+        out->ptr = it->buf + s;
+        out->len = it->end - s;
+        it->done = 1;
+        return 1;
+    }
+    while (it->pos < it->end) {
+        uint8_t b = it->buf[it->pos];
+        if (b == C0_US) {
+            out->ptr = it->buf + s;
+            out->len = it->pos - s;
+            it->pos++;
+            return 1;
+        }
+        if (b == C0_DLE) it->pos += 2;
+        else if (b == C0_STX) it->pos = c0__skip_nested(it->buf, it->pos, it->end);
+        else it->pos++;
+    }
+    e = it->pos < it->end ? it->pos : it->end;
+    out->ptr = it->buf + s;
+    out->len = e - s;
+    it->done = 1;
+    return 1;
+}
+
 c0_bytes c0_doc_name(const uint8_t *buf, size_t len) {
     c0_bytes b;
     b.ptr = buf;
@@ -752,6 +861,74 @@ void c0_build_etb(c0_builder *b) {
     c0__byte(b, C0_ETB);
 }
 
+void c0_build_etb_payload(c0_builder *b, const uint8_t *payload, size_t plen) {
+    size_t i;
+    c0__byte(b, C0_ETB);
+    for (i = 0; i < plen; i++) {
+        if (payload[i] < 0x20) {
+            b->status = C0_BUILD_BAD_PAYLOAD;
+            return;
+        }
+    }
+    c0__raw(b, payload, plen);
+}
+
+void c0_build_nested_open(c0_builder *b) {
+    c0__byte(b, C0_STX);
+}
+
+void c0_build_nested_close(c0_builder *b) {
+    c0__byte(b, C0_ETX);
+}
+
+void c0_build_ref(c0_builder *b, const uint8_t *name, size_t nlen) {
+    c0__byte(b, C0_ENQ);
+    c0__name(b, name, nlen);
+}
+
+void c0_build_ref_path(c0_builder *b, const c0_bytes *segments, size_t count) {
+    size_t i;
+    c0__byte(b, C0_ENQ);
+    c0__byte(b, C0_STX);
+    for (i = 0; i < count; i++) {
+        if (i) c0__byte(b, C0_US);
+        c0__name(b, segments[i].ptr, segments[i].len);
+    }
+    c0__byte(b, C0_ETX);
+}
+
+void c0_build_list_field(c0_builder *b, const c0_bytes *items, size_t count) {
+    size_t i;
+    c0__byte(b, C0_US);
+    c0__byte(b, C0_STX);
+    for (i = 0; i < count; i++) {
+        if (i) c0__byte(b, C0_US);
+        c0__escaped(b, items[i].ptr, items[i].len);
+    }
+    c0__byte(b, C0_ETX);
+}
+
+void c0_build_field(c0_builder *b, const uint8_t *value, size_t vlen) {
+    c0__byte(b, C0_US);
+    c0__escaped(b, value, vlen);
+}
+
+void c0_build_section(c0_builder *b, const uint8_t *name, size_t nlen, size_t depth) {
+    size_t i;
+    for (i = 0; i < depth; i++) c0__byte(b, C0_GS);
+    c0__name(b, name, nlen);
+}
+
+void c0_build_block(c0_builder *b, const uint8_t *text, size_t tlen) {
+    c0__byte(b, C0_RS);
+    c0__escaped(b, text, tlen);
+}
+
+void c0_build_item(c0_builder *b, const uint8_t *text, size_t tlen) {
+    c0__byte(b, C0_US);
+    c0__escaped(b, text, tlen);
+}
+
 static c0_bytes c0__cstr(const char *s) {
     c0_bytes b;
     b.ptr = (const uint8_t *)s;
@@ -787,6 +964,60 @@ void c0_build_record_str(c0_builder *b, const char *const *fields, size_t count)
         if (i) c0__byte(b, C0_US);
         c0__escaped(b, f.ptr, f.len);
     }
+}
+
+void c0_build_etb_payload_str(c0_builder *b, const char *payload) {
+    c0_bytes p = c0__cstr(payload);
+    c0_build_etb_payload(b, p.ptr, p.len);
+}
+
+void c0_build_ref_str(c0_builder *b, const char *name) {
+    c0_bytes n = c0__cstr(name);
+    c0_build_ref(b, n.ptr, n.len);
+}
+
+void c0_build_ref_path_str(c0_builder *b, const char *const *segments, size_t count) {
+    size_t i;
+    c0__byte(b, C0_ENQ);
+    c0__byte(b, C0_STX);
+    for (i = 0; i < count; i++) {
+        c0_bytes s = c0__cstr(segments[i]);
+        if (i) c0__byte(b, C0_US);
+        c0__name(b, s.ptr, s.len);
+    }
+    c0__byte(b, C0_ETX);
+}
+
+void c0_build_list_field_str(c0_builder *b, const char *const *items, size_t count) {
+    size_t i;
+    c0__byte(b, C0_US);
+    c0__byte(b, C0_STX);
+    for (i = 0; i < count; i++) {
+        c0_bytes s = c0__cstr(items[i]);
+        if (i) c0__byte(b, C0_US);
+        c0__escaped(b, s.ptr, s.len);
+    }
+    c0__byte(b, C0_ETX);
+}
+
+void c0_build_field_str(c0_builder *b, const char *value) {
+    c0_bytes v = c0__cstr(value);
+    c0_build_field(b, v.ptr, v.len);
+}
+
+void c0_build_section_str(c0_builder *b, const char *name, size_t depth) {
+    c0_bytes n = c0__cstr(name);
+    c0_build_section(b, n.ptr, n.len, depth);
+}
+
+void c0_build_block_str(c0_builder *b, const char *text) {
+    c0_bytes t = c0__cstr(text);
+    c0_build_block(b, t.ptr, t.len);
+}
+
+void c0_build_item_str(c0_builder *b, const char *text) {
+    c0_bytes t = c0__cstr(text);
+    c0_build_item(b, t.ptr, t.len);
 }
 
 /* --- Stream --- */
