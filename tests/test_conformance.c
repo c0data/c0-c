@@ -73,6 +73,47 @@ static int cf_block_eq(const c0_stream *s, int idx, const unsigned char *e, size
     return 0;
 }
 
+/* Raw (still-escaped) field idx of rec. */
+static int cf_field_n(c0_bytes rec, size_t idx, c0_bytes *out) {
+    c0_field_iter fi = c0_record_fields(rec);
+    c0_bytes f;
+    size_t i = 0;
+    while (c0_next_field(&fi, &f)) {
+        if (i == idx) {
+            *out = f;
+            return 1;
+        }
+        i++;
+    }
+    return 0;
+}
+
+static int cf_item_count(c0_bytes field) {
+    c0_list_iter li = c0_field_items(field);
+    c0_bytes it;
+    int n = 0;
+    while (c0_next_item(&li, &it)) n++;
+    return n;
+}
+
+/* Unescaped item idx of a raw list field equals e[0..n). */
+static int cf_item_eq(c0_bytes field, size_t idx, const unsigned char *e, size_t n) {
+    c0_list_iter li = c0_field_items(field);
+    c0_bytes it;
+    size_t i = 0;
+    while (c0_next_item(&li, &it)) {
+        if (i == idx) {
+            unsigned char tmp[1024];
+            size_t m;
+            if (it.len > sizeof(tmp)) return 0;
+            m = c0_unescape(it.ptr, it.len, tmp);
+            return m == n && (n == 0 || memcmp(tmp, e, n) == 0);
+        }
+        i++;
+    }
+    return 0;
+}
+
 #include "vectors_gen.h"
 
 int main(void) {
@@ -81,6 +122,7 @@ int main(void) {
     cf_canonical();
     cf_invalid();
     cf_stream();
+    cf_list();
     if (failures) {
         printf("%d conformance failure(s)\n", failures);
         return 1;

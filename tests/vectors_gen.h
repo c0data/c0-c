@@ -535,3 +535,229 @@ static void cf_stream(void) {
     CHECK(cf_block_count(&s)==0);
   }
 }
+
+static void cf_list(void) {
+  { /* three-items */
+    const unsigned char v133[] = {0x1e,0x41,0x6c,0x69,0x63,0x65,0x1f,0x02,0x41,0x64,0x6d,0x69,0x6e,0x1f,0x45,0x64,0x69,0x74,0x6f,0x72,0x1f,0x55,0x73,0x65,0x72,0x03,0x1f,0x31,0x35,0x30,0x32,0x2e,0x33,0x30};
+    { c0_group g = c0_table(v133, 34); c0_iter ri = c0_group_records(g); c0_bytes rec, f;
+      CHECK(c0_next_record(&ri,&rec));
+      CHECK(cf_arity(rec)==3);
+      const unsigned char v134[] = {0x41,0x6c,0x69,0x63,0x65};
+      CHECK(cf_val_eq(rec,0,v134,5));
+      CHECK(cf_field_n(rec,1,&f) && cf_item_count(f)==3);
+      const unsigned char v135[] = {0x41,0x64,0x6d,0x69,0x6e};
+      CHECK(cf_item_eq(f,0,v135,5));
+      const unsigned char v136[] = {0x45,0x64,0x69,0x74,0x6f,0x72};
+      CHECK(cf_item_eq(f,1,v136,6));
+      const unsigned char v137[] = {0x55,0x73,0x65,0x72};
+      CHECK(cf_item_eq(f,2,v137,4));
+      const unsigned char v138[] = {0x31,0x35,0x30,0x32,0x2e,0x33,0x30};
+      CHECK(cf_val_eq(rec,2,v138,7));
+      CHECK(!c0_next_record(&ri,&rec)); }
+    { c0_builder bld; c0_builder_init(&bld);
+      const unsigned char v139[] = {0x41,0x6c,0x69,0x63,0x65};
+      { c0_bytes F[] = {{v139,5}}; c0_build_record(&bld,F,1); }
+      const unsigned char v140[] = {0x41,0x64,0x6d,0x69,0x6e};
+      const unsigned char v141[] = {0x45,0x64,0x69,0x74,0x6f,0x72};
+      const unsigned char v142[] = {0x55,0x73,0x65,0x72};
+      { c0_bytes I[] = {{v140,5},{v141,6},{v142,4}}; c0_build_list_field(&bld,I,3); }
+      const unsigned char v143[] = {0x31,0x35,0x30,0x32,0x2e,0x33,0x30};
+      c0_build_field(&bld,v143,7);
+      CHECK(c0_builder_status(&bld)==C0_BUILD_OK);
+      { c0_bytes got=c0_builder_bytes(&bld);
+        CHECK(got.len==34 && memcmp(got.ptr,v133,34)==0);
+        CHECK(c0_canonical(got.ptr,got.len)); }
+      c0_builder_free(&bld); }
+  }
+  { /* escaped-items */
+    const unsigned char v144[] = {0x1e,0x78,0x1f,0x02,0x61,0x10,0x1f,0x62,0x1f,0x1f,0x63,0x10,0x02,0x64,0x1f,0x65,0x10,0x1e,0x66,0x03};
+    { c0_group g = c0_table(v144, 20); c0_iter ri = c0_group_records(g); c0_bytes rec, f;
+      CHECK(c0_next_record(&ri,&rec));
+      CHECK(cf_arity(rec)==2);
+      const unsigned char v145[] = {0x78};
+      CHECK(cf_val_eq(rec,0,v145,1));
+      CHECK(cf_field_n(rec,1,&f) && cf_item_count(f)==4);
+      const unsigned char v146[] = {0x61,0x1f,0x62};
+      CHECK(cf_item_eq(f,0,v146,3));
+      const unsigned char v147[1] = {0};
+      CHECK(cf_item_eq(f,1,v147,0));
+      const unsigned char v148[] = {0x63,0x02,0x64};
+      CHECK(cf_item_eq(f,2,v148,3));
+      const unsigned char v149[] = {0x65,0x1e,0x66};
+      CHECK(cf_item_eq(f,3,v149,3));
+      CHECK(!c0_next_record(&ri,&rec)); }
+    { c0_builder bld; c0_builder_init(&bld);
+      const unsigned char v150[] = {0x78};
+      { c0_bytes F[] = {{v150,1}}; c0_build_record(&bld,F,1); }
+      const unsigned char v151[] = {0x61,0x1f,0x62};
+      const unsigned char v152[1] = {0};
+      const unsigned char v153[] = {0x63,0x02,0x64};
+      const unsigned char v154[] = {0x65,0x1e,0x66};
+      { c0_bytes I[] = {{v151,3},{v152,0},{v153,3},{v154,3}}; c0_build_list_field(&bld,I,4); }
+      CHECK(c0_builder_status(&bld)==C0_BUILD_OK);
+      { c0_bytes got=c0_builder_bytes(&bld);
+        CHECK(got.len==20 && memcmp(got.ptr,v144,20)==0);
+        CHECK(c0_canonical(got.ptr,got.len)); }
+      c0_builder_free(&bld); }
+  }
+  { /* empty-list */
+    const unsigned char v155[] = {0x1e,0x78,0x1f,0x02,0x03};
+    { c0_group g = c0_table(v155, 5); c0_iter ri = c0_group_records(g); c0_bytes rec, f;
+      CHECK(c0_next_record(&ri,&rec));
+      CHECK(cf_arity(rec)==2);
+      const unsigned char v156[] = {0x78};
+      CHECK(cf_val_eq(rec,0,v156,1));
+      CHECK(cf_field_n(rec,1,&f) && cf_item_count(f)==0);
+      CHECK(!c0_next_record(&ri,&rec)); }
+    { c0_builder bld; c0_builder_init(&bld);
+      const unsigned char v157[] = {0x78};
+      { c0_bytes F[] = {{v157,1}}; c0_build_record(&bld,F,1); }
+      c0_build_list_field(&bld,(c0_bytes*)0,0);
+      CHECK(c0_builder_status(&bld)==C0_BUILD_OK);
+      { c0_bytes got=c0_builder_bytes(&bld);
+        CHECK(got.len==5 && memcmp(got.ptr,v155,5)==0);
+        CHECK(c0_canonical(got.ptr,got.len)); }
+      c0_builder_free(&bld); }
+  }
+  { /* two-empty-items */
+    const unsigned char v158[] = {0x1e,0x78,0x1f,0x02,0x1f,0x03};
+    { c0_group g = c0_table(v158, 6); c0_iter ri = c0_group_records(g); c0_bytes rec, f;
+      CHECK(c0_next_record(&ri,&rec));
+      CHECK(cf_arity(rec)==2);
+      const unsigned char v159[] = {0x78};
+      CHECK(cf_val_eq(rec,0,v159,1));
+      CHECK(cf_field_n(rec,1,&f) && cf_item_count(f)==2);
+      const unsigned char v160[1] = {0};
+      CHECK(cf_item_eq(f,0,v160,0));
+      const unsigned char v161[1] = {0};
+      CHECK(cf_item_eq(f,1,v161,0));
+      CHECK(!c0_next_record(&ri,&rec)); }
+    { c0_builder bld; c0_builder_init(&bld);
+      const unsigned char v162[] = {0x78};
+      { c0_bytes F[] = {{v162,1}}; c0_build_record(&bld,F,1); }
+      const unsigned char v163[1] = {0};
+      const unsigned char v164[1] = {0};
+      { c0_bytes I[] = {{v163,0},{v164,0}}; c0_build_list_field(&bld,I,2); }
+      CHECK(c0_builder_status(&bld)==C0_BUILD_OK);
+      { c0_bytes got=c0_builder_bytes(&bld);
+        CHECK(got.len==6 && memcmp(got.ptr,v158,6)==0);
+        CHECK(c0_canonical(got.ptr,got.len)); }
+      c0_builder_free(&bld); }
+  }
+  { /* single-item */
+    const unsigned char v165[] = {0x1e,0x78,0x1f,0x02,0x6f,0x6e,0x6c,0x79,0x03};
+    { c0_group g = c0_table(v165, 9); c0_iter ri = c0_group_records(g); c0_bytes rec, f;
+      CHECK(c0_next_record(&ri,&rec));
+      CHECK(cf_arity(rec)==2);
+      const unsigned char v166[] = {0x78};
+      CHECK(cf_val_eq(rec,0,v166,1));
+      CHECK(cf_field_n(rec,1,&f) && cf_item_count(f)==1);
+      const unsigned char v167[] = {0x6f,0x6e,0x6c,0x79};
+      CHECK(cf_item_eq(f,0,v167,4));
+      CHECK(!c0_next_record(&ri,&rec)); }
+    { c0_builder bld; c0_builder_init(&bld);
+      const unsigned char v168[] = {0x78};
+      { c0_bytes F[] = {{v168,1}}; c0_build_record(&bld,F,1); }
+      const unsigned char v169[] = {0x6f,0x6e,0x6c,0x79};
+      { c0_bytes I[] = {{v169,4}}; c0_build_list_field(&bld,I,1); }
+      CHECK(c0_builder_status(&bld)==C0_BUILD_OK);
+      { c0_bytes got=c0_builder_bytes(&bld);
+        CHECK(got.len==9 && memcmp(got.ptr,v165,9)==0);
+        CHECK(c0_canonical(got.ptr,got.len)); }
+      c0_builder_free(&bld); }
+  }
+  { /* two-lists */
+    const unsigned char v170[] = {0x1e,0x78,0x1f,0x02,0x61,0x03,0x1f,0x02,0x62,0x1f,0x63,0x03};
+    { c0_group g = c0_table(v170, 12); c0_iter ri = c0_group_records(g); c0_bytes rec, f;
+      CHECK(c0_next_record(&ri,&rec));
+      CHECK(cf_arity(rec)==3);
+      const unsigned char v171[] = {0x78};
+      CHECK(cf_val_eq(rec,0,v171,1));
+      CHECK(cf_field_n(rec,1,&f) && cf_item_count(f)==1);
+      const unsigned char v172[] = {0x61};
+      CHECK(cf_item_eq(f,0,v172,1));
+      CHECK(cf_field_n(rec,2,&f) && cf_item_count(f)==2);
+      const unsigned char v173[] = {0x62};
+      CHECK(cf_item_eq(f,0,v173,1));
+      const unsigned char v174[] = {0x63};
+      CHECK(cf_item_eq(f,1,v174,1));
+      CHECK(!c0_next_record(&ri,&rec)); }
+    { c0_builder bld; c0_builder_init(&bld);
+      const unsigned char v175[] = {0x78};
+      { c0_bytes F[] = {{v175,1}}; c0_build_record(&bld,F,1); }
+      const unsigned char v176[] = {0x61};
+      { c0_bytes I[] = {{v176,1}}; c0_build_list_field(&bld,I,1); }
+      const unsigned char v177[] = {0x62};
+      const unsigned char v178[] = {0x63};
+      { c0_bytes I[] = {{v177,1},{v178,1}}; c0_build_list_field(&bld,I,2); }
+      CHECK(c0_builder_status(&bld)==C0_BUILD_OK);
+      { c0_bytes got=c0_builder_bytes(&bld);
+        CHECK(got.len==12 && memcmp(got.ptr,v170,12)==0);
+        CHECK(c0_canonical(got.ptr,got.len)); }
+      c0_builder_free(&bld); }
+  }
+  { /* binary-item */
+    const unsigned char v179[] = {0x1e,0x78,0x1f,0x02,0x10,0x00,0xff,0x03};
+    { c0_group g = c0_table(v179, 8); c0_iter ri = c0_group_records(g); c0_bytes rec, f;
+      CHECK(c0_next_record(&ri,&rec));
+      CHECK(cf_arity(rec)==2);
+      const unsigned char v180[] = {0x78};
+      CHECK(cf_val_eq(rec,0,v180,1));
+      CHECK(cf_field_n(rec,1,&f) && cf_item_count(f)==1);
+      const unsigned char v181[] = {0x00,0xff};
+      CHECK(cf_item_eq(f,0,v181,2));
+      CHECK(!c0_next_record(&ri,&rec)); }
+    { c0_builder bld; c0_builder_init(&bld);
+      const unsigned char v182[] = {0x78};
+      { c0_bytes F[] = {{v182,1}}; c0_build_record(&bld,F,1); }
+      const unsigned char v183[] = {0x00,0xff};
+      { c0_bytes I[] = {{v183,2}}; c0_build_list_field(&bld,I,1); }
+      CHECK(c0_builder_status(&bld)==C0_BUILD_OK);
+      { c0_bytes got=c0_builder_bytes(&bld);
+        CHECK(got.len==8 && memcmp(got.ptr,v179,8)==0);
+        CHECK(c0_canonical(got.ptr,got.len)); }
+      c0_builder_free(&bld); }
+  }
+  { /* nested-scope-in-item */
+    const unsigned char v184[] = {0x1e,0x78,0x1f,0x02,0x61,0x1f,0x02,0x78,0x1f,0x79,0x03,0x1f,0x62,0x03};
+    { c0_group g = c0_table(v184, 14); c0_iter ri = c0_group_records(g); c0_bytes rec, f;
+      CHECK(c0_next_record(&ri,&rec));
+      CHECK(cf_arity(rec)==2);
+      const unsigned char v185[] = {0x78};
+      CHECK(cf_val_eq(rec,0,v185,1));
+      CHECK(cf_field_n(rec,1,&f) && cf_item_count(f)==3);
+      const unsigned char v186[] = {0x61};
+      CHECK(cf_item_eq(f,0,v186,1));
+      const unsigned char v187[] = {0x02,0x78,0x1f,0x79,0x03};
+      CHECK(cf_item_eq(f,1,v187,5));
+      const unsigned char v188[] = {0x62};
+      CHECK(cf_item_eq(f,2,v188,1));
+      CHECK(!c0_next_record(&ri,&rec)); }
+  }
+  { /* plain-field-as-list */
+    const unsigned char v189[] = {0x1e,0x78,0x1f,0x70,0x6c,0x61,0x69,0x6e};
+    { c0_group g = c0_table(v189, 8); c0_iter ri = c0_group_records(g); c0_bytes rec, f;
+      CHECK(c0_next_record(&ri,&rec));
+      CHECK(cf_arity(rec)==2);
+      const unsigned char v190[] = {0x78};
+      CHECK(cf_val_eq(rec,0,v190,1));
+      CHECK(cf_field_n(rec,1,&f) && cf_item_count(f)==1);
+      const unsigned char v191[] = {0x70,0x6c,0x61,0x69,0x6e};
+      CHECK(cf_item_eq(f,0,v191,5));
+      CHECK(!c0_next_record(&ri,&rec)); }
+  }
+  { /* missing-etx */
+    const unsigned char v192[] = {0x1e,0x78,0x1f,0x02,0x61,0x1f,0x62};
+    { c0_group g = c0_table(v192, 7); c0_iter ri = c0_group_records(g); c0_bytes rec, f;
+      CHECK(c0_next_record(&ri,&rec));
+      CHECK(cf_arity(rec)==2);
+      const unsigned char v193[] = {0x78};
+      CHECK(cf_val_eq(rec,0,v193,1));
+      CHECK(cf_field_n(rec,1,&f) && cf_item_count(f)==2);
+      const unsigned char v194[] = {0x61};
+      CHECK(cf_item_eq(f,0,v194,1));
+      const unsigned char v195[] = {0x62};
+      CHECK(cf_item_eq(f,1,v195,1));
+      CHECK(!c0_next_record(&ri,&rec)); }
+  }
+}
