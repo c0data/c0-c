@@ -46,6 +46,31 @@ while (c0_next_record(&ri, &rec)) {
 c0_builder_free(&b);
 ```
 
+### List fields
+
+A field whose value is a flat list is written as US-separated items inside
+STX/ETX (`␂Admin␟Editor␃`). `c0_build_list_field` writes one;
+`c0_field_items` / `c0_next_item` iterate it back, zero-alloc, yielding raw
+item slices to decode with `c0_unescape`.
+
+```c
+const char *roles[] = {"Admin", "Editor"};
+const char *row[]   = {"Alice"};
+c0_build_record_str(&b, row, 1);
+c0_build_list_field_str(&b, roles, 2);   /* one field: ␂Admin␟Editor␃ */
+
+/* reading: take field 1 of a record, then iterate its items */
+c0_list_iter it = c0_field_items(field);
+c0_bytes item;
+while (c0_next_item(&it, &item)) {
+    /* item.ptr / item.len; c0_unescape to decode */
+}
+```
+
+The builder also has `c0_build_field`, `nested_open`/`nested_close`, `ref`,
+`ref_path`, `section`, `block`, `item`, and `etb_payload` (each with a `_str`
+form), matching the Crystal reference.
+
 ## Status
 
 Core (single-header) — done and tested:
