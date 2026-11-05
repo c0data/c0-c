@@ -3,14 +3,14 @@
 
 /* ===== Value tree ===== */
 
-static c0_value *value_new(c0_value_kind k) {
-    c0_value *v = (c0_value *)calloc(1, sizeof(c0_value));
+static c0_json_value *value_new(c0_json_kind k) {
+    c0_json_value *v = (c0_json_value *)calloc(1, sizeof(c0_json_value));
     if (v) v->kind = k;
     return v;
 }
 
-c0_value *c0_value_str(const char *s, size_t len) {
-    c0_value *v = value_new(C0_JSON_STR);
+c0_json_value *c0_json_str(const char *s, size_t len) {
+    c0_json_value *v = value_new(C0_JSON_STR);
     if (!v) return NULL;
     v->s = (char *)malloc(len ? len : 1);
     if (!v->s) { free(v); return NULL; }
@@ -19,14 +19,14 @@ c0_value *c0_value_str(const char *s, size_t len) {
     return v;
 }
 
-c0_value *c0_value_array(void) { return value_new(C0_JSON_ARRAY); }
-c0_value *c0_value_object(void) { return value_new(C0_JSON_OBJECT); }
+c0_json_value *c0_json_array(void) { return value_new(C0_JSON_ARRAY); }
+c0_json_value *c0_json_object(void) { return value_new(C0_JSON_OBJECT); }
 
-int c0_value_array_push(c0_value *arr, c0_value *item) {
+int c0_json_array_push(c0_json_value *arr, c0_json_value *item) {
     if (!item) return 0;
     if (arr->n_items == arr->cap_items) {
         size_t nc = arr->cap_items ? arr->cap_items * 2 : 4;
-        c0_value **nv = (c0_value **)realloc(arr->items, nc * sizeof(c0_value *));
+        c0_json_value **nv = (c0_json_value **)realloc(arr->items, nc * sizeof(c0_json_value *));
         if (!nv) return 0;
         arr->items = nv;
         arr->cap_items = nc;
@@ -35,12 +35,12 @@ int c0_value_array_push(c0_value *arr, c0_value *item) {
     return 1;
 }
 
-int c0_value_object_push(c0_value *obj, const char *key, size_t key_len, c0_value *val) {
+int c0_json_object_push(c0_json_value *obj, const char *key, size_t key_len, c0_json_value *val) {
     char *kc;
     if (!val) return 0;
     if (obj->n_pairs == obj->cap_pairs) {
         size_t nc = obj->cap_pairs ? obj->cap_pairs * 2 : 4;
-        c0_pair *nv = (c0_pair *)realloc(obj->pairs, nc * sizeof(c0_pair));
+        c0_json_pair *nv = (c0_json_pair *)realloc(obj->pairs, nc * sizeof(c0_json_pair));
         if (!nv) return 0;
         obj->pairs = nv;
         obj->cap_pairs = nc;
@@ -55,7 +55,21 @@ int c0_value_object_push(c0_value *obj, const char *key, size_t key_len, c0_valu
     return 1;
 }
 
-void c0_value_free(c0_value *v) {
+/* Set a key: replace an existing entry's value (last wins) or append. */
+static int object_set(c0_json_value *obj, const uint8_t *key, size_t key_len, c0_json_value *val) {
+    size_t i;
+    if (!val) return 0;
+    for (i = 0; i < obj->n_pairs; i++) {
+        if (obj->pairs[i].key_len == key_len && (key_len == 0 || memcmp(obj->pairs[i].key, key, key_len) == 0)) {
+            c0_json_free(obj->pairs[i].val);
+            obj->pairs[i].val = val;
+            return 1;
+        }
+    }
+    return c0_json_object_push(obj, (const char *)key, key_len, val);
+}
+
+void c0_json_free(c0_json_value *v) {
     size_t i;
     if (!v) return;
     switch (v->kind) {
@@ -63,13 +77,13 @@ void c0_value_free(c0_value *v) {
             free(v->s);
             break;
         case C0_JSON_ARRAY:
-            for (i = 0; i < v->n_items; i++) c0_value_free(v->items[i]);
+            for (i = 0; i < v->n_items; i++) c0_json_free(v->items[i]);
             free(v->items);
             break;
         case C0_JSON_OBJECT:
             for (i = 0; i < v->n_pairs; i++) {
                 free(v->pairs[i].key);
-                c0_value_free(v->pairs[i].val);
+                c0_json_free(v->pairs[i].val);
             }
             free(v->pairs);
             break;
@@ -77,353 +91,293 @@ void c0_value_free(c0_value *v) {
     free(v);
 }
 
-/* A string value from raw bytes, DLE-unescaped. */
-static c0_value *value_unescaped(const uint8_t *b, size_t len) {
-    uint8_t *tmp;
-    size_t n;
-    c0_value *v;
-    tmp = (uint8_t *)malloc(len ? len : 1);
-    if (!tmp) return NULL;
-    n = c0_unescape(b, len, tmp);
-    v = c0_value_str((const char *)tmp, n);
-    free(tmp);
-    return v;
-}
+/* ===== Export: C0DATA -> value ===== */
 
-/* ===== Export: C0DATA -> Value ===== */
+typedef struct {
+    c0_error *err;
+} exp;
 
-typedef struct { c0_bytes *v; size_t n, cap; } bytes_vec;
-
-static int bv_push(bytes_vec *a, c0_bytes b) {
-    if (a->n == a->cap) {
-        size_t nc = a->cap ? a->cap * 2 : 8;
-        c0_bytes *nv = (c0_bytes *)realloc(a->v, nc * sizeof(c0_bytes));
-        if (!nv) return 0;
-        a->v = nv;
-        a->cap = nc;
+static void efail(exp *e, c0_status code, const char *msg) {
+    if (e->err && e->err->code == C0_OK) {
+        e->err->code = code;
+        e->err->pos = 0;
+        e->err->msg = msg;
     }
-    a->v[a->n++] = b;
-    return 1;
 }
 
-static int collect_fields(c0_bytes rec, bytes_vec *out) {
-    c0_field_iter fi = c0_record_fields(rec);
-    c0_bytes f;
-    out->v = NULL; out->n = 0; out->cap = 0;
-    while (c0_next_field(&fi, &f)) {
-        if (!bv_push(out, f)) return 0;
+static c0_json_value *export_body(exp *e, c0_body body, int level);
+
+/* A scalar unit as a string value (decoded). */
+static c0_json_value *export_scalar(exp *e, c0_bytes raw) {
+    uint8_t *scratch = (uint8_t *)malloc(raw.len ? raw.len : 1);
+    c0_bytes v;
+    c0_status st;
+    c0_json_value *out;
+    if (!scratch) { efail(e, C0_ERR_OOM, "out of memory"); return NULL; }
+    st = c0_value(raw, scratch, &v);
+    if (st != C0_OK) {
+        free(scratch);
+        efail(e, st, "malformed value");
+        return NULL;
     }
-    return 1;
+    out = c0_json_str((const char *)v.ptr, v.len);
+    free(scratch);
+    if (!out) efail(e, C0_ERR_OOM, "out of memory");
+    return out;
 }
 
-static c0_value *field_to_value(const uint8_t *field, size_t len);
-
-/* parse a nested STX..ETX field into an object/array Value */
-static size_t skip_nested(const uint8_t *buf, size_t pos, size_t stop) {
-    int depth = 1;
-    pos++; /* skip STX */
-    while (pos < stop && depth > 0) {
-        switch (buf[pos]) {
-            case C0_STX: depth++; break;
-            case C0_ETX: depth--; break;
-            case C0_DLE: pos++; break;
-            default: break;
+static c0_json_value *export_raw(exp *e, c0_bytes raw) {
+    switch (c0_unit_type(raw)) {
+        case C0_UNIT_LEVEL: {
+            c0_body lv;
+            c0_status st = c0_unit_level(raw, &lv);
+            if (st) { efail(e, st, "malformed level"); return NULL; }
+            return export_body(e, lv, 1);
         }
-        pos++;
+        case C0_UNIT_REF: {
+            c0_ref r;
+            c0_strbuf sb = {0, 0, 0, 0};
+            c0_json_value *obj, *s;
+            size_t i;
+            if (c0_unit_ref(raw, &r) != C0_OK) { efail(e, C0_ERR_SYNTAX, "malformed reference"); return NULL; }
+            for (i = 0; i < r.count; i++) {
+                if (i) c0_sb_byte(&sb, '/');
+                c0_sb_raw(&sb, r.seg[i].ptr, r.seg[i].len);
+            }
+            obj = c0_json_object();
+            s = sb.oom ? NULL : c0_json_str(sb.d ? (const char *)sb.d : "", sb.n);
+            free(sb.d);
+            if (!obj || !s || !c0_json_object_push(obj, "$ref", 4, s)) {
+                c0_json_free(obj);
+                c0_json_free(s);
+                efail(e, C0_ERR_OOM, "out of memory");
+                return NULL;
+            }
+            return obj;
+        }
+        default:
+            return export_scalar(e, raw);
     }
-    return pos;
 }
 
-static c0_value *parse_nested_kv(const uint8_t *f, size_t pos, size_t stop) {
-    c0_value *obj = c0_value_object();
-    if (!obj) return NULL;
-    while (pos < stop) {
-        if (f[pos] == C0_RS) {
-            size_t key_start, key_stop;
-            pos++;
-            key_start = pos;
-            while (pos < stop && f[pos] != C0_US) {
-                if (f[pos] == C0_DLE) pos += 2; else pos++;
+static c0_json_value *export_record(exp *e, c0_record rec) {
+    if (c0_record_keyed(rec)) {
+        c0_json_value *obj = c0_json_object();
+        c0_pair_iter pi = c0_record_pairs(rec);
+        c0_bytes k, raw;
+        if (!obj) { efail(e, C0_ERR_OOM, "out of memory"); return NULL; }
+        while (c0_next_pair(&pi, &k, &raw)) {
+            c0_json_value *v = export_raw(e, raw);
+            if (!v || !object_set(obj, k.ptr, k.len, v)) {
+                c0_json_free(v);
+                c0_json_free(obj);
+                efail(e, C0_ERR_OOM, "out of memory");
+                return NULL;
             }
-            key_stop = pos < stop ? pos : stop;
-            {
-                uint8_t *ktmp = (uint8_t *)malloc((key_stop - key_start) ? (key_stop - key_start) : 1);
-                size_t klen;
-                c0_value *val;
-                if (!ktmp) { c0_value_free(obj); return NULL; }
-                klen = c0_unescape(f + key_start, key_stop - key_start, ktmp);
-                if (pos < stop && f[pos] == C0_US) {
-                    size_t val_start, val_stop;
-                    pos++;
-                    val_start = pos;
-                    while (pos < stop && f[pos] != C0_RS) {
-                        if (f[pos] == C0_STX) pos = skip_nested(f, pos, stop);
-                        else if (f[pos] == C0_DLE) pos += 2;
-                        else pos++;
+        }
+        if (pi.err.code) { efail(e, pi.err.code, pi.err.msg); c0_json_free(obj); return NULL; }
+        return obj;
+    } else {
+        c0_json_value *arr = c0_json_array();
+        c0_unit_iter ui = c0_record_units(rec);
+        c0_bytes raw;
+        if (!arr) { efail(e, C0_ERR_OOM, "out of memory"); return NULL; }
+        while (c0_next_unit(&ui, &raw)) {
+            c0_json_value *v = export_raw(e, raw);
+            if (!v || !c0_json_array_push(arr, v)) {
+                c0_json_free(v);
+                c0_json_free(arr);
+                efail(e, C0_ERR_OOM, "out of memory");
+                return NULL;
+            }
+        }
+        if (ui.err.code) { efail(e, ui.err.code, ui.err.msg); c0_json_free(arr); return NULL; }
+        return arr;
+    }
+}
+
+/* A group: with a header row an array of objects; a single keyed record
+ * (or a single record inside a level) is the record itself; otherwise an
+ * array of its records. */
+static c0_json_value *export_group(exp *e, c0_group g, int level) {
+    c0_record header, rec;
+    c0_record_iter ri;
+    c0_json_value *out;
+    if (c0_group_header(g, &header)) {
+        c0_json_value *rows = c0_json_array();
+        if (!rows) { efail(e, C0_ERR_OOM, "out of memory"); return NULL; }
+        ri = c0_group_records(g);
+        while (c0_next_record(&ri, &rec)) {
+            c0_json_value *row;
+            if (c0_record_keyed(rec)) {
+                row = export_record(e, rec);
+            } else {
+                c0_unit_iter hi = c0_record_units(header);
+                c0_bytes hraw, hname, raw;
+                size_t i = 0, n = c0_record_count(rec);
+                row = c0_json_object();
+                if (!row) { efail(e, C0_ERR_OOM, "out of memory"); c0_json_free(rows); return NULL; }
+                while (c0_next_unit(&hi, &hraw)) {
+                    c0_json_value *cell;
+                    if (c0_value(hraw, NULL, &hname) != C0_OK) { efail(e, C0_ERR_SYNTAX, "malformed header"); c0_json_free(row); c0_json_free(rows); return NULL; }
+                    if (i < n && c0_record_field(rec, i, &raw) == C0_OK) cell = export_raw(e, raw);
+                    else cell = c0_json_str("", 0);
+                    if (!cell || !object_set(row, hname.ptr, hname.len, cell)) {
+                        c0_json_free(cell); c0_json_free(row); c0_json_free(rows);
+                        efail(e, C0_ERR_OOM, "out of memory");
+                        return NULL;
                     }
-                    val_stop = pos < stop ? pos : stop;
-                    val = field_to_value(f + val_start, val_stop - val_start);
-                } else {
-                    val = c0_value_str("", 0);
+                    i++;
                 }
-                if (!val || !c0_value_object_push(obj, (const char *)ktmp, klen, val)) {
-                    c0_value_free(val); free(ktmp); c0_value_free(obj); return NULL;
-                }
-                free(ktmp);
             }
-        } else {
-            pos++;
-        }
-    }
-    return obj;
-}
-
-static c0_value *parse_nested_array(const uint8_t *f, size_t pos, size_t stop) {
-    c0_value *arr = c0_value_array();
-    if (!arr) return NULL;
-    while (pos < stop) {
-        if (f[pos] == C0_US) {
-            size_t item_start, item_stop;
-            c0_value *item;
-            pos++;
-            item_start = pos;
-            while (pos < stop && f[pos] != C0_US) {
-                if (f[pos] == C0_STX) pos = skip_nested(f, pos, stop);
-                else if (f[pos] == C0_DLE) pos += 2;
-                else pos++;
-            }
-            item_stop = pos < stop ? pos : stop;
-            item = field_to_value(f + item_start, item_stop - item_start);
-            if (!item || !c0_value_array_push(arr, item)) {
-                c0_value_free(item); c0_value_free(arr); return NULL;
-            }
-        } else {
-            pos++;
-        }
-    }
-    return arr;
-}
-
-static c0_value *parse_nested_field(const uint8_t *f, size_t len) {
-    size_t stop = len, start, scan;
-    int has_rs = 0;
-    if (stop > 0 && f[stop - 1] == C0_ETX) stop--;
-    start = len > 0 ? 1 : 0; /* skip STX */
-    scan = start;
-    while (scan < stop) {
-        if (f[scan] == C0_RS) { has_rs = 1; break; }
-        if (f[scan] == C0_STX) scan = skip_nested(f, scan, stop);
-        else if (f[scan] == C0_DLE) scan += 2;
-        else scan++;
-    }
-    return has_rs ? parse_nested_kv(f, start, stop) : parse_nested_array(f, start, stop);
-}
-
-static c0_value *field_to_value(const uint8_t *field, size_t len) {
-    if (len > 0 && field[0] == C0_STX) return parse_nested_field(field, len);
-    return value_unescaped(field, len);
-}
-
-static c0_value *export_group_data(c0_group g);
-
-static c0_value *export_table(c0_group g, bytes_vec *headers) {
-    c0_value *rows = c0_value_array();
-    c0_iter ri;
-    c0_bytes rec;
-    if (!rows) return NULL;
-    ri = c0_group_records(g);
-    while (c0_next_record(&ri, &rec)) {
-        bytes_vec fields;
-        c0_value *row = c0_value_object();
-        size_t i;
-        if (!row) { c0_value_free(rows); return NULL; }
-        if (!collect_fields(rec, &fields)) { free(fields.v); c0_value_free(row); c0_value_free(rows); return NULL; }
-        for (i = 0; i < headers->n; i++) {
-            c0_value *cell;
-            if (i < fields.n) cell = field_to_value(fields.v[i].ptr, fields.v[i].len);
-            else cell = c0_value_str("", 0);
-            if (!cell || !c0_value_object_push(row, (const char *)headers->v[i].ptr, headers->v[i].len, cell)) {
-                c0_value_free(cell); free(fields.v); c0_value_free(row); c0_value_free(rows); return NULL;
+            if (!row || !c0_json_array_push(rows, row)) {
+                c0_json_free(row); c0_json_free(rows);
+                efail(e, C0_ERR_OOM, "out of memory");
+                return NULL;
             }
         }
-        free(fields.v);
-        if (!c0_value_array_push(rows, row)) { c0_value_free(row); c0_value_free(rows); return NULL; }
+        if (ri.err.code) { efail(e, ri.err.code, ri.err.msg); c0_json_free(rows); return NULL; }
+        return rows;
     }
-    return rows;
-}
-
-static c0_value *export_kv(c0_group g) {
-    c0_value *obj = c0_value_object();
-    c0_iter ri;
-    c0_bytes rec;
-    if (!obj) return NULL;
-    ri = c0_group_records(g);
-    while (c0_next_record(&ri, &rec)) {
-        bytes_vec fields;
-        uint8_t *ktmp;
-        size_t klen;
-        c0_value *val;
-        if (!collect_fields(rec, &fields)) { free(fields.v); c0_value_free(obj); return NULL; }
-        ktmp = (uint8_t *)malloc(fields.n > 0 && fields.v[0].len ? fields.v[0].len : 1);
-        if (!ktmp) { free(fields.v); c0_value_free(obj); return NULL; }
-        klen = fields.n > 0 ? c0_unescape(fields.v[0].ptr, fields.v[0].len, ktmp) : 0;
-        val = fields.n > 1 ? field_to_value(fields.v[1].ptr, fields.v[1].len) : c0_value_str("", 0);
-        if (!val || !c0_value_object_push(obj, (const char *)ktmp, klen, val)) {
-            c0_value_free(val); free(ktmp); free(fields.v); c0_value_free(obj); return NULL;
-        }
-        free(ktmp);
-        free(fields.v);
-    }
-    return obj;
-}
-
-static c0_value *export_records(c0_group g) {
-    c0_value *rows = c0_value_array();
-    c0_iter ri;
-    c0_bytes rec;
-    if (!rows) return NULL;
-    ri = c0_group_records(g);
-    while (c0_next_record(&ri, &rec)) {
-        bytes_vec fields;
-        c0_value *row = c0_value_array();
-        size_t i;
-        if (!row) { c0_value_free(rows); return NULL; }
-        if (!collect_fields(rec, &fields)) { free(fields.v); c0_value_free(row); c0_value_free(rows); return NULL; }
-        for (i = 0; i < fields.n; i++) {
-            c0_value *cell = field_to_value(fields.v[i].ptr, fields.v[i].len);
-            if (!cell || !c0_value_array_push(row, cell)) {
-                c0_value_free(cell); free(fields.v); c0_value_free(row); c0_value_free(rows); return NULL;
-            }
-        }
-        free(fields.v);
-        if (!c0_value_array_push(rows, row)) { c0_value_free(row); c0_value_free(rows); return NULL; }
-    }
-    return rows;
-}
-
-static c0_value *export_group_data(c0_group g) {
-    bytes_vec headers;
-    c0_iter hi;
-    c0_bytes h;
-    c0_iter ri;
-    c0_bytes rec;
-    int has_records = 0;
-    size_t rec0_fields = 0;
-    c0_value *result;
-
-    headers.v = NULL; headers.n = 0; headers.cap = 0;
-    hi = c0_group_headers(g);
-    while (c0_next_header(&hi, &h)) {
-        if (!bv_push(&headers, h)) { free(headers.v); return NULL; }
-    }
-    if (headers.n > 0) {
-        result = export_table(g, &headers);
-        free(headers.v);
-        return result;
-    }
-    free(headers.v);
-
-    /* Inspect the first record to choose key-value vs raw records. */
-    ri = c0_group_records(g);
-    if (c0_next_record(&ri, &rec)) {
-        c0_field_iter fi = c0_record_fields(rec);
-        c0_bytes f;
-        has_records = 1;
-        while (c0_next_field(&fi, &f)) rec0_fields++;
-    }
-    if (has_records && rec0_fields == 2) return export_kv(g);
-    if (has_records) return export_records(g);
-    return c0_value_array();
-}
-
-static c0_value *export_document(const uint8_t *buf, size_t len) {
-    c0_bytes name = c0_doc_name(buf, len);
-    c0_value *groups = c0_value_object();
-    c0_doc_iter di;
-    c0_group g;
-    if (!groups) return NULL;
-    di = c0_doc(buf, len);
-    while (c0_next_group(&di, &g)) {
-        c0_bytes gn = c0_group_name(g);
-        c0_value *data = export_group_data(g);
-        if (!data || !c0_value_object_push(groups, (const char *)gn.ptr, gn.len, data)) {
-            c0_value_free(data); c0_value_free(groups); return NULL;
-        }
-    }
-    if (name.len == 0) return groups;
     {
-        c0_value *wrap = c0_value_object();
-        if (!wrap || !c0_value_object_push(wrap, (const char *)name.ptr, name.len, groups)) {
-            c0_value_free(wrap); c0_value_free(groups); return NULL;
+        size_t n = 0;
+        c0_record first;
+        ri = c0_group_records(g);
+        while (c0_next_record(&ri, &rec)) {
+            if (n == 0) first = rec;
+            n++;
         }
-        return wrap;
+        if (ri.err.code) { efail(e, ri.err.code, ri.err.msg); return NULL; }
+        if (n == 1 && (c0_record_keyed(first) || level)) return export_record(e, first);
     }
+    out = c0_json_array();
+    if (!out) { efail(e, C0_ERR_OOM, "out of memory"); return NULL; }
+    ri = c0_group_records(g);
+    while (c0_next_record(&ri, &rec)) {
+        c0_json_value *r = export_record(e, rec);
+        if (!r || !c0_json_array_push(out, r)) {
+            c0_json_free(r); c0_json_free(out);
+            efail(e, C0_ERR_OOM, "out of memory");
+            return NULL;
+        }
+    }
+    return out;
 }
 
-c0_value *c0_to_value(const uint8_t *buf, size_t len) {
-    if (len > 0 && buf[0] == C0_FS) return export_document(buf, len);
-    if (len > 0 && buf[0] == C0_GS) {
-        c0_group g = c0_table(buf, len);
-        c0_bytes gn = c0_group_name(g);
-        c0_value *obj = c0_value_object();
-        c0_value *data;
-        if (!obj) return NULL;
-        data = export_group_data(g);
-        if (!data || !c0_value_object_push(obj, (const char *)gn.ptr, gn.len, data)) {
-            c0_value_free(data); c0_value_free(obj); return NULL;
+/* The groups of a file: none → []; one unnamed depth-0 group → that group;
+ * otherwise an object of name → group. */
+static c0_json_value *export_groups(exp *e, c0_file f, int level) {
+    c0_group_iter gi = c0_file_groups(f);
+    c0_group g, first;
+    size_t n = 0;
+    c0_json_value *obj;
+    while (c0_next_group(&gi, &g)) {
+        if (n == 0) first = g;
+        n++;
+    }
+    if (gi.err.code) { efail(e, gi.err.code, gi.err.msg); return NULL; }
+    if (n == 0) {
+        c0_json_value *arr = c0_json_array();
+        if (!arr) efail(e, C0_ERR_OOM, "out of memory");
+        return arr;
+    }
+    if (n == 1 && c0_group_name(first).len == 0 && first.depth == 0) return export_group(e, first, level);
+    obj = c0_json_object();
+    if (!obj) { efail(e, C0_ERR_OOM, "out of memory"); return NULL; }
+    gi = c0_file_groups(f);
+    while (c0_next_group(&gi, &g)) {
+        c0_bytes name = c0_group_name(g);
+        c0_json_value *v = export_group(e, g, 0);
+        if (!v || !object_set(obj, name.ptr, name.len, v)) {
+            c0_json_free(v); c0_json_free(obj);
+            efail(e, C0_ERR_OOM, "out of memory");
+            return NULL;
+        }
+    }
+    return obj;
+}
+
+/* A body: a bare one exports as its group(s); a named file as {name: groups};
+ * several files as an object of them. */
+static c0_json_value *export_body(exp *e, c0_body body, int level) {
+    c0_file_iter fi = c0_body_files(body);
+    c0_file f, first;
+    size_t n = 0;
+    c0_json_value *obj;
+    while (c0_next_file(&fi, &f)) {
+        if (n == 0) first = f;
+        n++;
+    }
+    if (fi.err.code) { efail(e, fi.err.code, fi.err.msg); return NULL; }
+    if (n == 1) {
+        c0_bytes name = c0_file_name(first);
+        c0_json_value *groups = export_groups(e, first, level);
+        if (!groups) return NULL;
+        if (name.len == 0) return groups;
+        obj = c0_json_object();
+        if (!obj || !c0_json_object_push(obj, (const char *)name.ptr, name.len, groups)) {
+            c0_json_free(obj); c0_json_free(groups);
+            efail(e, C0_ERR_OOM, "out of memory");
+            return NULL;
         }
         return obj;
     }
-    return c0_value_object();
-}
-
-/* ===== Import: Value -> C0DATA ===== */
-
-static void write_escaped(c0_strbuf *sb, const char *s, size_t len) {
-    size_t i;
-    for (i = 0; i < len; i++) {
-        uint8_t b = (uint8_t)s[i];
-        if (b < 0x20) c0_sb_byte(sb, C0_DLE);
-        c0_sb_byte(sb, b);
+    obj = c0_json_object();
+    if (!obj) { efail(e, C0_ERR_OOM, "out of memory"); return NULL; }
+    fi = c0_body_files(body);
+    while (c0_next_file(&fi, &f)) {
+        c0_bytes name = c0_file_name(f);
+        c0_json_value *groups = export_groups(e, f, level);
+        if (!groups || !object_set(obj, name.ptr, name.len, groups)) {
+            c0_json_free(groups); c0_json_free(obj);
+            efail(e, C0_ERR_OOM, "out of memory");
+            return NULL;
+        }
     }
+    return obj;
 }
 
-static void write_group(c0_strbuf *sb, const char *name, size_t len) {
-    c0_sb_byte(sb, C0_GS);
-    c0_sb_raw(sb, (const uint8_t *)name, len);
+c0_json_value *c0_to_value(const uint8_t *buf, size_t len, c0_error *err) {
+    c0_document doc;
+    exp e;
+    c0_error local = {C0_OK, 0, ""};
+    e.err = err ? err : &local;
+    e.err->code = C0_OK;
+    e.err->pos = 0;
+    e.err->msg = "";
+    if (c0_document_read(buf, len, 0, &doc, e.err) != C0_OK) return NULL;
+    return export_body(&e, doc.body, 0);
 }
 
-static const char *as_str(const c0_value *v, size_t *len) {
-    if (v->kind == C0_JSON_STR) { *len = v->s_len; return v->s; }
-    *len = 0;
-    return "";
-}
+/* ===== Import: value -> C0DATA ===== */
 
-static int all_scalar(const c0_value *obj) {
+static int all_groupable(const c0_json_value *obj) {
     size_t i;
-    for (i = 0; i < obj->n_pairs; i++)
-        if (obj->pairs[i].val->kind != C0_JSON_STR) return 0;
+    if (obj->n_pairs == 0) return 0;
+    for (i = 0; i < obj->n_pairs; i++) {
+        if (obj->pairs[i].val->kind == C0_JSON_STR) return 0;
+    }
     return 1;
 }
 
-static int all_groupable(const c0_value *obj) {
+static int all_kind(const c0_json_value *arr, c0_json_kind k) {
     size_t i;
-    for (i = 0; i < obj->n_pairs; i++)
-        if (obj->pairs[i].val->kind == C0_JSON_STR) return 0;
+    for (i = 0; i < arr->n_items; i++) {
+        if (arr->items[i]->kind != k) return 0;
+    }
     return 1;
 }
 
 /* Do all array items share the first object's key sequence? */
-static int tabular(const c0_value *arr) {
-    const c0_value *first;
+static int tabular(const c0_json_value *arr) {
+    const c0_json_value *first;
     size_t i, j;
     if (arr->n_items == 0) return 0;
     first = arr->items[0];
     if (first->kind != C0_JSON_OBJECT) return 0;
     for (i = 0; i < arr->n_items; i++) {
-        const c0_value *it = arr->items[i];
-        if (it->kind != C0_JSON_OBJECT) return 0;
-        if (it->n_pairs != first->n_pairs) return 0;
+        const c0_json_value *it = arr->items[i];
+        if (it->kind != C0_JSON_OBJECT || it->n_pairs != first->n_pairs) return 0;
         for (j = 0; j < it->n_pairs; j++) {
             if (it->pairs[j].key_len != first->pairs[j].key_len ||
                 memcmp(it->pairs[j].key, first->pairs[j].key, it->pairs[j].key_len) != 0)
@@ -433,167 +387,197 @@ static int tabular(const c0_value *arr) {
     return 1;
 }
 
-static void emit_field_value(const c0_value *v, c0_strbuf *sb);
-static void emit_array_as_group(const c0_value *arr, const char *name, size_t nlen, c0_strbuf *sb);
-static void emit_hash_as_groups(const c0_value *obj, c0_strbuf *sb);
-
-static void emit_field_value(const c0_value *v, c0_strbuf *sb) {
+static const c0_json_value *fetch(const c0_json_value *obj, const char *key, size_t klen) {
     size_t i;
-    switch (v->kind) {
+    for (i = 0; i < obj->n_pairs; i++) {
+        if (obj->pairs[i].key_len == klen && memcmp(obj->pairs[i].key, key, klen) == 0) return obj->pairs[i].val;
+    }
+    return NULL;
+}
+
+#define B(s, n) ((const uint8_t *)(s)), (n)
+
+static void emit_level_body(c0_builder *b, const c0_json_value *v);
+static void emit_map(c0_builder *b, const c0_json_value *obj);
+static void emit_item_as_record(c0_builder *b, const c0_json_value *item);
+
+/* A value in unit position: a scalar, or a level. */
+static void emit_unit(c0_builder *b, const c0_json_value *v) {
+    if (v->kind == C0_JSON_STR) {
+        c0_build_field(b, B(v->s, v->s_len));
+    } else {
+        c0_build_level_open(b);
+        emit_level_body(b, v);
+        c0_build_level_close(b);
+    }
+}
+
+/* An object → one keyed record, entries in object order. */
+static void emit_map(c0_builder *b, const c0_json_value *obj) {
+    size_t i;
+    c0_build_record(b, NULL, 0);
+    for (i = 0; i < obj->n_pairs; i++) {
+        const c0_json_pair *p = &obj->pairs[i];
+        if (p->val->kind == C0_JSON_STR) {
+            c0_build_key(b, B(p->key, p->key_len), B(p->val->s, p->val->s_len));
+        } else {
+            c0_build_key_level_open(b, B(p->key, p->key_len));
+            emit_level_body(b, p->val);
+            c0_build_level_close(b);
+        }
+    }
+}
+
+static void emit_header_from(c0_builder *b, const c0_json_value *first) {
+    c0_bytes *names = (c0_bytes *)malloc((first->n_pairs ? first->n_pairs : 1) * sizeof(c0_bytes));
+    size_t i;
+    if (!names) {
+        if (b->status == C0_OK) b->status = C0_ERR_OOM;
+        return;
+    }
+    for (i = 0; i < first->n_pairs; i++) {
+        names[i].ptr = (const uint8_t *)first->pairs[i].key;
+        names[i].len = first->pairs[i].key_len;
+    }
+    c0_build_header(b, names, first->n_pairs);
+    free(names);
+}
+
+static void emit_table_rows(c0_builder *b, const c0_json_value *arr) {
+    const c0_json_value *first = arr->items[0];
+    size_t i, j;
+    for (i = 0; i < arr->n_items; i++) {
+        const c0_json_value *row = arr->items[i];
+        c0_build_record(b, NULL, 0);
+        for (j = 0; j < first->n_pairs; j++) {
+            const c0_json_value *cell = fetch(row, first->pairs[j].key, first->pairs[j].key_len);
+            if (cell) emit_unit(b, cell);
+            else c0_build_field(b, B("", 0));
+        }
+    }
+}
+
+static void emit_array_as_group(c0_builder *b, const c0_json_value *arr, const char *name, size_t nlen) {
+    size_t i;
+    c0_build_group(b, B(name, nlen));
+    if (tabular(arr)) {
+        emit_header_from(b, arr->items[0]);
+        emit_table_rows(b, arr);
+    } else {
+        for (i = 0; i < arr->n_items; i++) emit_item_as_record(b, arr->items[i]);
+    }
+}
+
+static void emit_item_as_record(c0_builder *b, const c0_json_value *item) {
+    size_t i;
+    switch (item->kind) {
         case C0_JSON_STR:
-            write_escaped(sb, v->s, v->s_len);
-            break;
-        case C0_JSON_OBJECT:
-            c0_sb_byte(sb, C0_STX);
-            for (i = 0; i < v->n_pairs; i++) {
-                c0_sb_byte(sb, C0_RS);
-                write_escaped(sb, v->pairs[i].key, v->pairs[i].key_len);
-                c0_sb_byte(sb, C0_US);
-                emit_field_value(v->pairs[i].val, sb);
-            }
-            c0_sb_byte(sb, C0_ETX);
+            c0_build_block(b, B(item->s, item->s_len));
             break;
         case C0_JSON_ARRAY:
-            c0_sb_byte(sb, C0_STX);
-            for (i = 0; i < v->n_items; i++) {
-                c0_sb_byte(sb, C0_US);
-                emit_field_value(v->items[i], sb);
-            }
-            c0_sb_byte(sb, C0_ETX);
+            c0_build_record(b, NULL, 0);
+            for (i = 0; i < item->n_items; i++) emit_unit(b, item->items[i]);
+            break;
+        case C0_JSON_OBJECT:
+            emit_map(b, item);
             break;
     }
 }
 
-static void emit_array_as_group(const c0_value *arr, const char *name, size_t nlen, c0_strbuf *sb) {
+/* Inside a level: an array of scalars is one record (a list); an array of
+ * uniform objects a table with a header row; an array of arrays a table; a
+ * mixed array one record per item; an object a map. */
+static void emit_level_body(c0_builder *b, const c0_json_value *v) {
     size_t i, j;
-    if (tabular(arr)) {
-        const c0_value *first = arr->items[0];
-        write_group(sb, name, nlen);
-        c0_sb_byte(sb, C0_SOH);
-        for (i = 0; i < first->n_pairs; i++) {
-            if (i > 0) c0_sb_byte(sb, C0_US);
-            c0_sb_raw(sb, (const uint8_t *)first->pairs[i].key, first->pairs[i].key_len);
-        }
-        for (i = 0; i < arr->n_items; i++) {
-            const c0_value *row = arr->items[i];
-            c0_sb_byte(sb, C0_RS);
-            for (j = 0; j < first->n_pairs; j++) {
-                size_t k;
-                const c0_value *cell = NULL;
-                if (j > 0) c0_sb_byte(sb, C0_US);
-                for (k = 0; k < row->n_pairs; k++) {
-                    if (row->pairs[k].key_len == first->pairs[j].key_len &&
-                        memcmp(row->pairs[k].key, first->pairs[j].key, first->pairs[j].key_len) == 0) {
-                        cell = row->pairs[k].val;
-                        break;
-                    }
+    switch (v->kind) {
+        case C0_JSON_OBJECT:
+            emit_map(b, v);
+            break;
+        case C0_JSON_ARRAY:
+            if (all_kind(v, C0_JSON_STR)) {
+                c0_build_record(b, NULL, 0);
+                for (i = 0; i < v->n_items; i++) c0_build_field(b, B(v->items[i]->s, v->items[i]->s_len));
+            } else if (tabular(v)) {
+                emit_header_from(b, v->items[0]);
+                emit_table_rows(b, v);
+            } else if (all_kind(v, C0_JSON_ARRAY)) {
+                for (i = 0; i < v->n_items; i++) {
+                    c0_build_record(b, NULL, 0);
+                    for (j = 0; j < v->items[i]->n_items; j++) emit_unit(b, v->items[i]->items[j]);
                 }
-                if (cell) emit_field_value(cell, sb);
-            }
-        }
-    } else {
-        write_group(sb, name, nlen);
-        for (i = 0; i < arr->n_items; i++) {
-            const c0_value *item = arr->items[i];
-            if (item->kind == C0_JSON_STR) {
-                c0_sb_byte(sb, C0_RS);
-                write_escaped(sb, item->s, item->s_len);
-            } else if (item->kind == C0_JSON_ARRAY) {
-                c0_sb_byte(sb, C0_RS);
-                for (j = 0; j < item->n_items; j++) {
-                    if (j > 0) c0_sb_byte(sb, C0_US);
-                    emit_field_value(item->items[j], sb);
-                }
-            } else { /* object */
-                for (j = 0; j < item->n_pairs; j++) {
-                    c0_sb_byte(sb, C0_RS);
-                    write_escaped(sb, item->pairs[j].key, item->pairs[j].key_len);
-                    c0_sb_byte(sb, C0_US);
-                    emit_field_value(item->pairs[j].val, sb);
-                }
-            }
-        }
-    }
-}
-
-static void emit_hash_as_groups(const c0_value *obj, c0_strbuf *sb) {
-    size_t i, k;
-    for (i = 0; i < obj->n_pairs; i++) {
-        const char *name = obj->pairs[i].key;
-        size_t nlen = obj->pairs[i].key_len;
-        const c0_value *value = obj->pairs[i].val;
-        if (value->kind == C0_JSON_OBJECT) {
-            int scalar = all_scalar(value);
-            write_group(sb, name, nlen);
-            for (k = 0; k < value->n_pairs; k++) {
-                c0_sb_byte(sb, C0_RS);
-                write_escaped(sb, value->pairs[k].key, value->pairs[k].key_len);
-                c0_sb_byte(sb, C0_US);
-                if (scalar) {
-                    size_t sl; const char *s = as_str(value->pairs[k].val, &sl);
-                    write_escaped(sb, s, sl);
-                } else {
-                    emit_field_value(value->pairs[k].val, sb);
-                }
-            }
-        } else if (value->kind == C0_JSON_ARRAY) {
-            emit_array_as_group(value, name, nlen, sb);
-        } else {
-            size_t sl; const char *s;
-            write_group(sb, name, nlen);
-            c0_sb_byte(sb, C0_RS);
-            s = as_str(value, &sl);
-            write_escaped(sb, s, sl);
-        }
-    }
-}
-
-static void emit_root(const c0_value *value, const char *group_name, size_t gnlen, c0_strbuf *sb) {
-    size_t k;
-    if (value->kind == C0_JSON_OBJECT) {
-        if (all_scalar(value)) {
-            write_group(sb, group_name, gnlen);
-            for (k = 0; k < value->n_pairs; k++) {
-                size_t sl; const char *s;
-                c0_sb_byte(sb, C0_RS);
-                write_escaped(sb, value->pairs[k].key, value->pairs[k].key_len);
-                c0_sb_byte(sb, C0_US);
-                s = as_str(value->pairs[k].val, &sl);
-                write_escaped(sb, s, sl);
-            }
-        } else if (value->n_pairs == 1) {
-            const c0_value *inner = value->pairs[0].val;
-            if (inner->kind == C0_JSON_OBJECT && all_groupable(inner)) {
-                c0_sb_byte(sb, C0_FS);
-                c0_sb_raw(sb, (const uint8_t *)value->pairs[0].key, value->pairs[0].key_len);
-                emit_hash_as_groups(inner, sb);
             } else {
-                emit_hash_as_groups(value, sb);
+                for (i = 0; i < v->n_items; i++) emit_item_as_record(b, v->items[i]);
             }
-        } else {
-            emit_hash_as_groups(value, sb);
-        }
-    } else if (value->kind == C0_JSON_ARRAY) {
-        emit_array_as_group(value, group_name, gnlen, sb);
-    } else {
-        size_t sl; const char *s;
-        write_group(sb, group_name, gnlen);
-        c0_sb_byte(sb, C0_RS);
-        s = as_str(value, &sl);
-        write_escaped(sb, s, sl);
+            break;
+        case C0_JSON_STR:
+            c0_build_block(b, B(v->s, v->s_len));
+            break;
     }
 }
 
-uint8_t *c0_from_value(const c0_value *v, const char *group_name, size_t *out_len) {
-    c0_strbuf sb = {0, 0, 0, 0};
-    const char *gn = group_name ? group_name : "data";
-    size_t gnlen = strlen(gn);
-    emit_root(v, gn, gnlen, &sb);
-    if (sb.oom) { free(sb.d); return NULL; }
-    if (!sb.d) sb.d = (uint8_t *)malloc(1);
-    if (!sb.d) return NULL;
-    if (out_len) *out_len = sb.n;
-    return sb.d;
+static void emit_groups(c0_builder *b, const c0_json_value *obj) {
+    size_t i;
+    for (i = 0; i < obj->n_pairs; i++) {
+        const c0_json_pair *p = &obj->pairs[i];
+        switch (p->val->kind) {
+            case C0_JSON_OBJECT:
+                c0_build_group(b, B(p->key, p->key_len));
+                emit_map(b, p->val);
+                break;
+            case C0_JSON_ARRAY:
+                emit_array_as_group(b, p->val, p->key, p->key_len);
+                break;
+            case C0_JSON_STR:
+                c0_build_group(b, B(p->key, p->key_len));
+                c0_build_block(b, B(p->val->s, p->val->s_len));
+                break;
+        }
+    }
+}
+
+/* Top level: an object of groups (one key wrapping an object of groups
+ * becomes a file); an array becomes one group; an object of scalars one
+ * group holding one map; a scalar one record. */
+static void emit_root(c0_builder *b, const c0_json_value *v, const char *group_name) {
+    size_t gnlen = strlen(group_name);
+    switch (v->kind) {
+        case C0_JSON_OBJECT:
+            if (v->n_pairs == 1 && v->pairs[0].val->kind == C0_JSON_OBJECT && all_groupable(v->pairs[0].val)) {
+                c0_build_file(b, B(v->pairs[0].key, v->pairs[0].key_len));
+                emit_groups(b, v->pairs[0].val);
+            } else if (all_groupable(v)) {
+                emit_groups(b, v);
+            } else {
+                c0_build_group(b, B(group_name, gnlen));
+                emit_map(b, v);
+            }
+            break;
+        case C0_JSON_ARRAY:
+            emit_array_as_group(b, v, group_name, gnlen);
+            break;
+        case C0_JSON_STR:
+            c0_build_group(b, B(group_name, gnlen));
+            c0_build_block(b, B(v->s, v->s_len));
+            break;
+    }
+}
+
+uint8_t *c0_from_value(const c0_json_value *v, const char *group_name, size_t *out_len) {
+    c0_builder b;
+    c0_bytes got;
+    uint8_t *out;
+    c0_builder_init(&b);
+    emit_root(&b, v, group_name ? group_name : "data");
+    if (c0_builder_status(&b) != C0_OK) {
+        c0_builder_free(&b);
+        return NULL;
+    }
+    got = c0_builder_bytes(&b);
+    out = (uint8_t *)malloc(got.len ? got.len : 1);
+    if (out && got.len) memcpy(out, got.ptr, got.len);
+    if (out && out_len) *out_len = got.len;
+    c0_builder_free(&b);
+    return out;
 }
 
 /* ===== JSON text: parser ===== */
@@ -608,7 +592,7 @@ static void jp_ws(jparse *p) {
     }
 }
 
-static c0_value *jp_value(jparse *p);
+static c0_json_value *jp_value(jparse *p);
 
 static void utf8_encode(c0_strbuf *sb, unsigned cp) {
     if (cp < 0x80) {
@@ -643,8 +627,7 @@ static int hex4(const char *s, unsigned *out) {
     return 1;
 }
 
-/* Parse a JSON string starting at the opening quote; returns decoded bytes in
- * sb (caller-owned), advances p past the closing quote. Returns 0 on error. */
+/* A JSON string from its opening quote; decoded bytes go to sb. 0 on error. */
 static int jp_string_raw(jparse *p, c0_strbuf *sb) {
     if (p->pos >= p->len || p->s[p->pos] != '"') return 0;
     p->pos++;
@@ -689,57 +672,57 @@ static int jp_string_raw(jparse *p, c0_strbuf *sb) {
     return 0; /* unterminated */
 }
 
-static c0_value *jp_string(jparse *p) {
+static c0_json_value *jp_string(jparse *p) {
     c0_strbuf sb = {0, 0, 0, 0};
-    c0_value *v;
+    c0_json_value *v;
     if (!jp_string_raw(p, &sb)) { free(sb.d); return NULL; }
-    v = c0_value_str(sb.d ? (const char *)sb.d : "", sb.n);
+    v = c0_json_str(sb.d ? (const char *)sb.d : "", sb.n);
     free(sb.d);
     return v;
 }
 
-static c0_value *jp_object(jparse *p) {
-    c0_value *obj = c0_value_object();
+static c0_json_value *jp_object(jparse *p) {
+    c0_json_value *obj = c0_json_object();
     if (!obj) return NULL;
     p->pos++; /* { */
     jp_ws(p);
     if (p->pos < p->len && p->s[p->pos] == '}') { p->pos++; return obj; }
     for (;;) {
         c0_strbuf key = {0, 0, 0, 0};
-        c0_value *val;
+        c0_json_value *val;
         jp_ws(p);
-        if (!jp_string_raw(p, &key)) { free(key.d); c0_value_free(obj); return NULL; }
+        if (!jp_string_raw(p, &key)) { free(key.d); c0_json_free(obj); return NULL; }
         jp_ws(p);
-        if (p->pos >= p->len || p->s[p->pos] != ':') { free(key.d); c0_value_free(obj); return NULL; }
+        if (p->pos >= p->len || p->s[p->pos] != ':') { free(key.d); c0_json_free(obj); return NULL; }
         p->pos++;
         val = jp_value(p);
-        if (!val) { free(key.d); c0_value_free(obj); return NULL; }
-        if (!c0_value_object_push(obj, key.d ? (const char *)key.d : "", key.n, val)) {
-            free(key.d); c0_value_free(val); c0_value_free(obj); return NULL;
+        if (!val) { free(key.d); c0_json_free(obj); return NULL; }
+        if (!c0_json_object_push(obj, key.d ? (const char *)key.d : "", key.n, val)) {
+            free(key.d); c0_json_free(val); c0_json_free(obj); return NULL;
         }
         free(key.d);
         jp_ws(p);
         if (p->pos < p->len && p->s[p->pos] == ',') { p->pos++; continue; }
         if (p->pos < p->len && p->s[p->pos] == '}') { p->pos++; return obj; }
-        c0_value_free(obj);
+        c0_json_free(obj);
         return NULL;
     }
 }
 
-static c0_value *jp_array(jparse *p) {
-    c0_value *arr = c0_value_array();
+static c0_json_value *jp_array(jparse *p) {
+    c0_json_value *arr = c0_json_array();
     if (!arr) return NULL;
     p->pos++; /* [ */
     jp_ws(p);
     if (p->pos < p->len && p->s[p->pos] == ']') { p->pos++; return arr; }
     for (;;) {
-        c0_value *item = jp_value(p);
-        if (!item) { c0_value_free(arr); return NULL; }
-        if (!c0_value_array_push(arr, item)) { c0_value_free(item); c0_value_free(arr); return NULL; }
+        c0_json_value *item = jp_value(p);
+        if (!item) { c0_json_free(arr); return NULL; }
+        if (!c0_json_array_push(arr, item)) { c0_json_free(item); c0_json_free(arr); return NULL; }
         jp_ws(p);
         if (p->pos < p->len && p->s[p->pos] == ',') { p->pos++; continue; }
         if (p->pos < p->len && p->s[p->pos] == ']') { p->pos++; return arr; }
-        c0_value_free(arr);
+        c0_json_free(arr);
         return NULL;
     }
 }
@@ -750,19 +733,18 @@ static int lit(jparse *p, const char *word) {
     return 0;
 }
 
-static c0_value *jp_number(jparse *p) {
+static c0_json_value *jp_number(jparse *p) {
     size_t start = p->pos;
     while (p->pos < p->len) {
         char c = p->s[p->pos];
-        if ((c >= '0' && c <= '9') || c == '-' || c == '+' || c == '.' || c == 'e' || c == 'E')
-            p->pos++;
+        if ((c >= '0' && c <= '9') || c == '-' || c == '+' || c == '.' || c == 'e' || c == 'E') p->pos++;
         else break;
     }
     if (p->pos == start) return NULL;
-    return c0_value_str(p->s + start, p->pos - start);
+    return c0_json_str(p->s + start, p->pos - start);
 }
 
-static c0_value *jp_value(jparse *p) {
+static c0_json_value *jp_value(jparse *p) {
     char c;
     jp_ws(p);
     if (p->pos >= p->len) return NULL;
@@ -771,25 +753,25 @@ static c0_value *jp_value(jparse *p) {
         case '{': return jp_object(p);
         case '[': return jp_array(p);
         case '"': return jp_string(p);
-        case 't': return lit(p, "true") ? c0_value_str("true", 4) : NULL;
-        case 'f': return lit(p, "false") ? c0_value_str("false", 5) : NULL;
-        case 'n': return lit(p, "null") ? c0_value_str("", 0) : NULL;
+        case 't': return lit(p, "true") ? c0_json_str("true", 4) : NULL;
+        case 'f': return lit(p, "false") ? c0_json_str("false", 5) : NULL;
+        case 'n': return lit(p, "null") ? c0_json_str("", 0) : NULL;
         default:  return jp_number(p);
     }
 }
 
-c0_value *c0_json_parse(const char *json, size_t len) {
+c0_json_value *c0_json_parse(const char *json, size_t len) {
     jparse p;
-    c0_value *v;
+    c0_json_value *v;
     p.s = json; p.len = len; p.pos = 0;
     v = jp_value(&p);
     if (!v) return NULL;
     jp_ws(&p);
-    if (p.pos != p.len) { c0_value_free(v); return NULL; } /* trailing junk */
+    if (p.pos != p.len) { c0_json_free(v); return NULL; } /* trailing junk */
     return v;
 }
 
-/* ===== JSON text: serializer (serde-style 2-space pretty) ===== */
+/* ===== JSON text: serializer (2-space pretty) ===== */
 
 static void json_str(c0_strbuf *sb, const char *s, size_t len) {
     static const char *hex = "0123456789abcdef";
@@ -823,7 +805,7 @@ static void indent(c0_strbuf *sb, int depth) {
     for (i = 0; i < depth * 2; i++) c0_sb_byte(sb, ' ');
 }
 
-static void json_emit(c0_strbuf *sb, const c0_value *v, int depth) {
+static void json_emit(c0_strbuf *sb, const c0_json_value *v, int depth) {
     size_t i;
     switch (v->kind) {
         case C0_JSON_STR:
@@ -858,7 +840,7 @@ static void json_emit(c0_strbuf *sb, const c0_value *v, int depth) {
     }
 }
 
-char *c0_json_print(const c0_value *v, size_t *out_len) {
+char *c0_json_print(const c0_json_value *v, size_t *out_len) {
     c0_strbuf sb = {0, 0, 0, 0};
     json_emit(&sb, v, 0);
     c0_sb_byte(&sb, 0);
@@ -867,20 +849,20 @@ char *c0_json_print(const c0_value *v, size_t *out_len) {
     return (char *)sb.d;
 }
 
-char *c0_to_json(const uint8_t *buf, size_t len, size_t *out_len) {
-    c0_value *v = c0_to_value(buf, len);
+char *c0_to_json(const uint8_t *buf, size_t len, size_t *out_len, c0_error *err) {
+    c0_json_value *v = c0_to_value(buf, len, err);
     char *out;
     if (!v) return NULL;
     out = c0_json_print(v, out_len);
-    c0_value_free(v);
+    c0_json_free(v);
     return out;
 }
 
 uint8_t *c0_from_json(const char *json, size_t len, const char *group_name, size_t *out_len) {
-    c0_value *v = c0_json_parse(json, len);
+    c0_json_value *v = c0_json_parse(json, len);
     uint8_t *out;
     if (!v) return NULL;
     out = c0_from_value(v, group_name, out_len);
-    c0_value_free(v);
+    c0_json_free(v);
     return out;
 }

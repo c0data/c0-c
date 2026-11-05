@@ -1,127 +1,114 @@
-/* test_csv.c — exercises the CSV ⇄ C0DATA converter. */
 #define C0_IMPLEMENTATION
 #include "../c0.h"
 #include "../c0_csv.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 
 static int failures = 0;
 
-#define CHECK(cond, msg) do { \
-    if (!(cond)) { printf("FAIL: %s\n", msg); failures++; } \
-} while (0)
+#define CHECK(cond)                                                       \
+    do {                                                                  \
+        if (!(cond)) {                                                    \
+            printf("FAIL %s:%d: %s\n", __FILE__, __LINE__, #cond);        \
+            failures++;                                                   \
+        }                                                                 \
+    } while (0)
 
-/* Compare a C0 buffer's first table back to expected CSV text. */
-static void expect_csv(const uint8_t *buf, size_t len, const char *want, const char *msg) {
-    size_t n = 0;
-    char *got = c0_to_csv(buf, len, &n);
-    CHECK(got != NULL, msg);
-    if (got) {
-        if (strcmp(got, want) != 0) {
-            printf("FAIL: %s\n  want: %s\n  got:  %s\n", msg, want, got);
-            failures++;
-        }
-        free(got);
-    }
+static int bytes_eq(const uint8_t *got, size_t glen, const char *want, size_t wlen) {
+    return glen == wlen && memcmp(got, want, wlen) == 0;
 }
 
 static void test_roundtrip(void) {
     const char *csv = "name,amount\nAlice,100\nBob,200\n";
-    size_t blen = 0;
-    uint8_t *buf = c0_from_csv(csv, strlen(csv), "users", &blen);
-    CHECK(buf != NULL && blen > 0, "from_csv produces output");
-    /* A single group is GS-prefixed (a bare group, no FS file wrapper). */
-    CHECK(buf && buf[0] == C0_GS, "from_csv emits a GS-prefixed group");
-    if (buf) {
-        expect_csv(buf, blen, csv, "roundtrip basic CSV");
-        free(buf);
-    }
+    size_t n = 0, m = 0;
+    uint8_t *c0 = c0_from_csv(csv, strlen(csv), "users", &n);
+    const char want[] = "\x1d" "users" "\x01\x1e" "name" "\x1f" "amount" "\x1e" "Alice" "\x1f" "100" "\x1e" "Bob" "\x1f" "200";
+    char *back;
+    CHECK(c0 && bytes_eq(c0, n, want, sizeof(want) - 1));
+    CHECK(c0 && c0_canonical(c0, n));
+    back = c0_to_csv(c0, n, NULL, &m, NULL);
+    CHECK(back && strcmp(back, csv) == 0);
+    free(back);
+    back = c0_to_csv(c0, n, "users", &m, NULL);
+    CHECK(back && strcmp(back, csv) == 0);
+    free(back);
+    free(c0);
 }
 
 static void test_default_group(void) {
     const char *csv = "a,b\n1,2\n";
-    size_t blen = 0;
-    uint8_t *buf = c0_from_csv(csv, strlen(csv), NULL, &blen);
-    CHECK(buf != NULL, "from_csv with NULL group name");
-    if (buf) {
-        c0_doc_iter di = c0_doc(buf, blen);
-        c0_group g;
-        if (c0_next_group(&di, &g)) {
-            c0_bytes nm = c0_group_name(g);
-            CHECK(nm.len == 4 && memcmp(nm.ptr, "data", 4) == 0, "default group name is 'data'");
-        } else {
-            CHECK(0, "default-group document has a group");
-        }
-        free(buf);
-    }
+    size_t n = 0;
+    uint8_t *c0 = c0_from_csv(csv, strlen(csv), NULL, &n);
+    CHECK(c0 && n > 5 && memcmp(c0, "\x1d" "data", 5) == 0);
+    free(c0);
 }
 
 static void test_quoting(void) {
-    /* Field with comma, quote, and newline must round-trip through quoting. */
-    const char *csv = "h1,h2\n\"a,b\",\"c\"\"d\"\n";
-    size_t blen = 0;
-    uint8_t *buf = c0_from_csv(csv, strlen(csv), "t", &blen);
-    CHECK(buf != NULL, "from_csv with quoted fields");
-    if (buf) {
-        expect_csv(buf, blen, csv, "roundtrip quoted fields (comma + doubled quote)");
-        free(buf);
-    }
+    const char *csv = "note,n\n\"a, b\",\"say \"\"hi\"\"\"\n";
+    size_t n = 0, m = 0;
+    uint8_t *c0 = c0_from_csv(csv, strlen(csv), "t", &n);
+    char *back = c0_to_csv(c0, n, NULL, &m, NULL);
+    CHECK(back && strcmp(back, csv) == 0);
+    free(back);
+    free(c0);
 }
 
 static void test_embedded_newline(void) {
-    const char *csv = "h\n\"line1\nline2\"\n";
-    size_t blen = 0;
-    uint8_t *buf = c0_from_csv(csv, strlen(csv), "t", &blen);
-    CHECK(buf != NULL, "from_csv with embedded newline");
-    if (buf) {
-        expect_csv(buf, blen, csv, "roundtrip field containing newline");
-        free(buf);
-    }
+    /* a value with a line break becomes text in C0 and is quoted in CSV */
+    const char *csv = "k\n\"line one\nline two\"\n";
+    size_t n = 0, m = 0;
+    uint8_t *c0 = c0_from_csv(csv, strlen(csv), "t", &n);
+    char *back;
+    const char want[] = "\x1d" "t" "\x01\x1e" "k" "\x1e\x02" "line one\nline two" "\x03";
+    CHECK(c0 && bytes_eq(c0, n, want, sizeof(want) - 1));
+    back = c0_to_csv(c0, n, NULL, &m, NULL);
+    CHECK(back && strcmp(back, csv) == 0);
+    free(back);
+    free(c0);
 }
 
-static void test_crlf(void) {
-    /* CRLF input should normalize to LF on output. */
-    const char *csv = "a,b\r\n1,2\r\n";
-    const char *want = "a,b\n1,2\n";
-    size_t blen = 0;
-    uint8_t *buf = c0_from_csv(csv, strlen(csv), "t", &blen);
-    CHECK(buf != NULL, "from_csv with CRLF");
-    if (buf) {
-        expect_csv(buf, blen, want, "CRLF normalized to LF");
-        free(buf);
-    }
+static void test_crlf_and_no_trailing_newline(void) {
+    const char *csv = "a,b\r\n1,2\r\n3,4";
+    size_t n = 0, m = 0;
+    uint8_t *c0 = c0_from_csv(csv, strlen(csv), "t", &n);
+    char *back = c0_to_csv(c0, n, NULL, &m, NULL);
+    CHECK(back && strcmp(back, "a,b\n1,2\n3,4\n") == 0);
+    free(back);
+    free(c0);
 }
 
-static void test_no_trailing_newline(void) {
-    const char *csv = "a,b\n1,2";   /* last row not newline-terminated */
-    const char *want = "a,b\n1,2\n";
-    size_t blen = 0;
-    uint8_t *buf = c0_from_csv(csv, strlen(csv), "t", &blen);
-    CHECK(buf != NULL, "from_csv without trailing newline");
-    if (buf) {
-        expect_csv(buf, blen, want, "final row without trailing newline captured");
-        free(buf);
-    }
+static void test_headers_only_and_empty(void) {
+    size_t n = 0, m = 0;
+    uint8_t *c0 = c0_from_csv("a,b\n", 4, "t", &n);
+    char *back = c0_to_csv(c0, n, NULL, &m, NULL);
+    CHECK(back && strcmp(back, "a,b\n") == 0);
+    free(back);
+    free(c0);
+    CHECK(c0_from_csv("", 0, "t", &n) == NULL && n == 0);
 }
 
-static void test_headers_only(void) {
-    const char *csv = "a,b,c\n";
-    size_t blen = 0;
-    uint8_t *buf = c0_from_csv(csv, strlen(csv), "t", &blen);
-    CHECK(buf != NULL, "from_csv headers-only");
-    if (buf) {
-        expect_csv(buf, blen, csv, "headers-only roundtrip");
-        free(buf);
+static void test_refs_levels_and_errors(void) {
+    /* GS g RS ENQ tags US ENQ STX tags US 001 ETX */
+    const uint8_t in[] = "\x1d" "g" "\x1e\x05" "tags" "\x1f\x05\x02" "tags" "\x1f" "001" "\x03";
+    size_t m = 0;
+    c0_error err;
+    char *back = c0_to_csv(in, sizeof(in) - 1, NULL, &m, NULL);
+    CHECK(back && strcmp(back, "tags,tags/001\n") == 0);
+    free(back);
+    {
+        const uint8_t lv[] = "\x1d" "g" "\x1e" "a" "\x1f\x10\x1e" "x" "\x18";
+        CHECK(c0_to_csv(lv, sizeof(lv) - 1, NULL, &m, &err) == NULL && err.code == C0_ERR_SYNTAX);
     }
-}
-
-static void test_empty(void) {
-    size_t blen = 123;
-    uint8_t *buf = c0_from_csv("", 0, "t", &blen);
-    CHECK(buf == NULL && blen == 0, "empty CSV yields NULL output");
-    if (buf) free(buf);
+    CHECK(c0_to_csv(in, sizeof(in) - 1, "none", &m, &err) == NULL && err.code == C0_ERR_NOT_FOUND);
+    {
+        /* a document with SYN heading and a named file still exports its first group */
+        const uint8_t doc[] = "\x16\x1c" "db" "\x1d" "g" "\x01\x1e" "k" "\x1e" "v" "\x04";
+        back = c0_to_csv(doc, sizeof(doc) - 1, NULL, &m, NULL);
+        CHECK(back && strcmp(back, "k\nv\n") == 0);
+        free(back);
+    }
 }
 
 int main(void) {
@@ -129,15 +116,13 @@ int main(void) {
     test_default_group();
     test_quoting();
     test_embedded_newline();
-    test_crlf();
-    test_no_trailing_newline();
-    test_headers_only();
-    test_empty();
-
-    if (failures == 0) {
-        printf("test_csv: all tests passed\n");
-        return 0;
+    test_crlf_and_no_trailing_newline();
+    test_headers_only_and_empty();
+    test_refs_levels_and_errors();
+    if (failures) {
+        printf("%d failure(s)\n", failures);
+        return 1;
     }
-    printf("test_csv: %d failure(s)\n", failures);
-    return 1;
+    printf("all csv tests passed\n");
+    return 0;
 }
