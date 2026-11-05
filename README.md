@@ -1,13 +1,14 @@
 # c0
 
-A C implementation of [C0DATA](https://github.com/c0data) — structured
+A C implementation of [C0DATA](https://github.com/c0data) 1.0 — structured
 data built on ASCII C0 control codes. Single-header, C99, no dependencies
 beyond libc.
 
-The read path is **zero-copy and allocation-free**: cursors walk a
-caller-owned buffer and hand back `(pointer, length)` views into it. The hot
-loop is a single comparison, `byte < 0x20` — this is the implementation C0 was
-designed for, and the natural core for other languages to bind to via FFI.
+The read path is **zero-copy and allocation-free**: views and cursors walk a
+caller-owned buffer and hand back `(pointer, length)` slices into it. The hot
+loop outside text is a single comparison, `byte < 0x20` — this is the
+implementation C0 was designed for, and the natural core for other languages
+to bind to via FFI (the Python and Ruby packages wrap this header).
 
 ## Usage
 
@@ -21,80 +22,97 @@ Drop `c0.h` into your project. In exactly one translation unit:
 Everywhere else, just `#include "c0.h"` for the declarations.
 
 ```c
-/* Write */
+/* Write: ␖␁shape␟tabular␝users␁␞name␟amount␞Alice␟100␞Bob␟200␄ */
 c0_builder b;
 c0_builder_init(&b);
+c0_build_syn(&b);
+c0_build_key_str(&b, "shape", "tabular");
 c0_build_group_str(&b, "users");
 {
     const char *hdrs[] = {"name", "amount"};
     const char *row[]  = {"Alice", "100"};
-    c0_build_headers_str(&b, hdrs, 2);
-    c0_build_record_str(&b, row, 2);
+    c0_build_header_str(&b, hdrs, 2);          /* ␁␞name␟amount */
+    c0_build_record_str(&b, row, 2);           /* ␞Alice␟100    */
 }
+c0_build_eot(&b);
 c0_bytes buf = c0_builder_bytes(&b);
 
 /* Read (zero-copy) */
-c0_group g = c0_table(buf.ptr, buf.len);
-c0_iter ri = c0_group_records(g);
-c0_bytes rec, field;
-while (c0_next_record(&ri, &rec)) {
-    c0_field_iter fi = c0_record_fields(rec);
-    while (c0_next_field(&fi, &field)) {
-        /* field.ptr / field.len point into buf; c0_unescape to decode */
+c0_document doc;
+if (c0_document_read(buf.ptr, buf.len, 0, &doc, NULL) == C0_OK) {
+    c0_group_iter gi = c0_body_groups(doc.body);
+    c0_group g;
+    while (c0_next_group(&gi, &g)) {
+        c0_record_iter ri = c0_group_records(g);
+        c0_record rec;
+        while (c0_next_record(&ri, &rec)) {
+            c0_unit_iter ui = c0_record_units(rec);
+            c0_bytes raw, value;
+            while (c0_next_unit(&ui, &raw)) {
+                /* raw points into buf; c0_value decodes text in place when it can */
+                if (c0_value(raw, NULL, &value) == C0_OK) { /* value.ptr / value.len */ }
+            }
+        }
     }
 }
 c0_builder_free(&b);
 ```
 
-### List fields
+Values are written in their one spelling: plain when they can be, text
+(`␂…␃`) when they hold a control byte or edge whitespace. `c0_validate`
+checks a buffer against the grammar once; the navigators then assume
+well-formed input. `c0_canonical` answers whether bytes are a canonical unit.
 
-A field whose value is a flat list is written as US-separated items inside
-STX/ETX (`␂Admin␟Editor␃`). `c0_build_list_field` writes one;
-`c0_field_items` / `c0_next_item` iterate it back, zero-alloc, yielding raw
-item slices to decode with `c0_unescape`.
+### Keyed records, nesting, references
 
 ```c
-const char *roles[] = {"Admin", "Editor"};
-const char *row[]   = {"Alice"};
-c0_build_record_str(&b, row, 1);
-c0_build_list_field_str(&b, roles, 2);   /* one field: ␂Admin␟Editor␃ */
+const char *keys[] = {"host", "port"}, *vals[] = {"localhost", "5432"};
+c0_build_map_str(&b, keys, vals, 2);        /* ␞␁host␟localhost␁port␟5432 */
 
-/* reading: take field 1 of a record, then iterate its items */
-c0_list_iter it = c0_field_items(field);
-c0_bytes item;
-while (c0_next_item(&it, &item)) {
-    /* item.ptr / item.len; c0_unescape to decode */
-}
+const char *roles[] = {"Admin", "Editor"};
+c0_build_record_str(&b, row, 1);
+c0_build_list_str(&b, roles, 2);            /* one unit: ␐␞Admin␟Editor␘ */
+c0_build_level_open(&b);                    /* ␐ … a whole body … ␘   */
+c0_build_map_str(&b, keys, vals, 2);
+c0_build_level_close(&b);
+c0_build_ref_str(&b, "tags");               /* ␅tags */
 ```
 
-The builder also has `c0_build_field`, `nested_open`/`nested_close`, `ref`,
-`ref_path`, `section`, `block`, `item`, and `etb_payload` (each with a `_str`
-form), matching the Crystal reference.
+Reading back: `c0_record_keyed` / `c0_record_pairs` / `c0_record_get` for
+maps, `c0_unit_level` for a nested body, `c0_unit_list` for the flat-list
+case, `c0_unit_ref` for a reference. Documents come from `c0_documents` /
+`c0_next_document` (SYN heading, body, EOT, warnings); `c0_blob` reads a
+trailing blob declared in the heading's `blob` table.
 
 ## Status
 
 Core (single-header) — done and tested:
 
-- tokenizer; table/record and document/group readers (cursor API)
-- builder (byte-transparent fields; names reject control bytes)
-- canonical-form helpers (`c0_canonical`, `c0_unescape`, `c0_is_assigned`)
-- ETB stream mode (`c0_stream_read`: committed region, torn-tail detection,
-  block cursor)
-- pretty (Unicode Control Pictures): `c0_pretty_format` / `c0_pretty_parse`
-- passes the shared conformance vectors
+- scanning primitives, values (`c0_value`, `c0_decode_text`), bodies with
+  files / groups / records / units as cursors
+- validator (`c0_validate`) and canonical check (`c0_canonical`)
+- documents and containers (SYN heading, EOT, EM tail, warnings as bits)
+- builder (canonical spelling; names must be plain)
+- ETB stream mode (`c0_stream_read`: committed region, damaged blocks,
+  torn-tail detection, block cursor)
+- pretty form (Unicode Control Pictures): `c0_pretty_format` in compact,
+  aligned and spaced modes, `c0_pretty_parse`
+- passes every shared conformance vector (decode, encode, canonical, invalid,
+  stream, nested, diff)
 
 Converters — separate `.c` files that `#include "c0.h"`, compiled in only when
 you need them (the core header stays dependency-free):
 
 - `c0_csv.{h,c}` — `c0_from_csv` / `c0_to_csv` (RFC-4180 quoting)
-- `c0_json.{h,c}` — a `c0_value` tree plus `c0_to_value` / `c0_from_value` and a
-  dependency-free JSON text codec (`c0_to_json` / `c0_from_json`,
-  `c0_json_parse` / `c0_json_print`); scalars are strings, as in the reference
-  implementations
-- `c0_diff.{h,c}` — C0DIFF parse / build / atomic `c0_diff_apply`
+- `c0_json.{h,c}` — a `c0_json_value` tree plus `c0_to_value` /
+  `c0_from_value` and a dependency-free JSON text codec (`c0_to_json` /
+  `c0_from_json`, `c0_json_parse` / `c0_json_print`); scalars are strings,
+  as in the reference implementations
+- `c0_diff.{h,c}` — C0-DIFF parse / build / atomic `c0_diff_apply`
+  (anchored sections, replace-all, dead lines)
 
 Each shares the tiny `c0_strbuf.h` growable-buffer helper. The converters emit
-byte-identical output to the Crystal and Rust reference implementations.
+byte-identical output to the Crystal reference implementation.
 
 ## Build & test
 
