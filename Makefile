@@ -10,8 +10,8 @@ test: $(TESTS)
 tests/test_core: tests/test_core.c c0.h
 	$(CC) $(CFLAGS) -o $@ tests/test_core.c
 
-tests/test_conformance: tests/test_conformance.c tests/vectors_gen.h c0.h
-	$(CC) $(CFLAGS) -o $@ tests/test_conformance.c
+tests/test_conformance: tests/test_conformance.c tests/vectors_gen.h c0.h c0_diff.c c0_diff.h c0_strbuf.h
+	$(CC) $(CFLAGS) -o $@ tests/test_conformance.c c0_diff.c
 
 tests/test_csv: tests/test_csv.c c0_csv.c c0_csv.h c0_strbuf.h c0.h
 	$(CC) $(CFLAGS) -o $@ tests/test_csv.c c0_csv.c
@@ -22,9 +22,10 @@ tests/test_diff: tests/test_diff.c c0_diff.c c0_diff.h c0_strbuf.h c0.h
 tests/test_json: tests/test_json.c c0_json.c c0_json.h c0_strbuf.h c0.h
 	$(CC) $(CFLAGS) -o $@ tests/test_json.c c0_json.c
 
-# Regenerate the conformance driver from the vendored vectors (needs python3).
+# Regenerate the conformance driver from the c0-spec submodule's vectors
+# (needs python3; the output is committed so `make test` does not).
 gen:
-	python3 tools/gen_vectors.py
+	python3 -I tools/gen_vectors.py
 
 clean:
 	rm -f $(TESTS)
