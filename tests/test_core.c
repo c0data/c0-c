@@ -295,6 +295,193 @@ static void test_builder(void) {
     c0_builder_free(&b);
 }
 
+/* The builder's bytes equal the pretty-form glyph string `want`. */
+static int built_is(const c0_builder *b, const char *want) {
+    size_t n;
+    uint8_t *w = c0_pretty_parse(want, strlen(want), &n);
+    c0_bytes got = c0_builder_bytes(b);
+    int ok = w != NULL && got.len == n && (n == 0 || memcmp(got.ptr, w, n) == 0);
+    if (!ok) {
+        char *s = c0_pretty_format(got.ptr, got.len, NULL, C0_PRETTY_COMPACT, &n, NULL);
+        printf("  want %s\n  got  %s", want, s ? s : "(unformattable)\n");
+        free(s);
+    }
+    free(w);
+    return ok;
+}
+
+/* The primitives: one function per code, spelled as the bytes read; they
+ * share the record state with the composed functions, so the two mix. */
+static void test_builder_primitives(void) {
+    c0_builder b, lo;
+
+    /* refuses an empty note, through either layer */
+    c0_builder_init(&b);
+    c0_build_record_str(&b, NULL, 0);
+    c0_build_note_str(&b, "");
+    CHECK(c0_builder_status(&b) == C0_ERR_BAD_STATE);
+    c0_builder_free(&b);
+    c0_builder_init(&b);
+    c0_builder_rs_str(&b, "a");
+    c0_builder_bel_str(&b, "");
+    CHECK(c0_builder_status(&b) == C0_ERR_BAD_STATE);
+    c0_builder_free(&b);
+
+    /* spells primitives as the bytes read */
+    c0_builder_init(&b);
+    c0_builder_fs_str(&b, "inv"); c0_builder_gs_str(&b, "users"); c0_builder_soh(&b);
+    c0_builder_rs_str(&b, "name"); c0_builder_us_str(&b, "amount");
+    CHECK(built_is(&b, "\xe2\x90\x9c" "inv" "\xe2\x90\x9d" "users" "\xe2\x90\x81\xe2\x90\x9e" "name" "\xe2\x90\x9f" "amount"));
+    c0_builder_free(&b);
+
+    c0_builder_init(&b);
+    c0_builder_rs_str(&b, "Alice"); c0_builder_us_str(&b, "1502.30");
+    CHECK(built_is(&b, "\xe2\x90\x9e" "Alice" "\xe2\x90\x9f" "1502.30"));
+    c0_builder_free(&b);
+
+    c0_builder_init(&b);
+    c0_builder_rs(&b);
+    c0_builder_soh_str(&b, "host"); c0_builder_us_str(&b, "localhost");
+    c0_builder_soh_str(&b, "port"); c0_builder_us_str(&b, "5432");
+    CHECK(built_is(&b, "\xe2\x90\x9e\xe2\x90\x81" "host" "\xe2\x90\x9f" "localhost" "\xe2\x90\x81" "port" "\xe2\x90\x9f" "5432"));
+    c0_builder_free(&b);
+
+    c0_builder_init(&b);
+    c0_builder_rs_str(&b, "cfg"); c0_builder_us(&b); c0_builder_dle(&b);
+    c0_builder_rs(&b); c0_builder_soh_str(&b, "b"); c0_builder_us_str(&b, "2"); c0_builder_can(&b);
+    CHECK(built_is(&b, "\xe2\x90\x9e" "cfg" "\xe2\x90\x9f\xe2\x90\x90\xe2\x90\x9e\xe2\x90\x81" "b" "\xe2\x90\x9f" "2" "\xe2\x90\x98"));
+    c0_builder_free(&b);
+
+    c0_builder_init(&b);
+    c0_builder_bel_str(&b, "checked"); c0_builder_rs_str(&b, "x");
+    CHECK(built_is(&b, "\xe2\x90\x87" "checked" "\xe2\x90\x9e" "x"));
+    c0_builder_free(&b);
+
+    c0_builder_init(&b);
+    c0_builder_bel(&b); c0_builder_gs_str(&b, "old"); c0_builder_rs_str(&b, "1");
+    c0_builder_gs_str(&b, "new"); c0_builder_rs_str(&b, "2");
+    CHECK(built_is(&b, "\xe2\x90\x87\xe2\x90\x9d" "old" "\xe2\x90\x9e" "1" "\xe2\x90\x9d" "new" "\xe2\x90\x9e" "2"));
+    c0_builder_free(&b);
+
+    {
+        const char *path[] = {"users", "1"};
+        c0_builder_init(&b);
+        c0_builder_gs(&b); c0_builder_gs_str(&b, "sub"); c0_builder_rs(&b);
+        c0_builder_enq_str(&b, "users"); c0_builder_us(&b); c0_builder_enq_path_str(&b, path, 2);
+        CHECK(built_is(&b, "\xe2\x90\x9d\xe2\x90\x9d" "sub" "\xe2\x90\x9e\xe2\x90\x85" "users" "\xe2\x90\x9f\xe2\x90\x85\xe2\x90\x82" "users" "\xe2\x90\x9f" "1" "\xe2\x90\x83"));
+        c0_builder_free(&b);
+    }
+
+    c0_builder_init(&b);
+    c0_builder_syn(&b); c0_builder_soh_str(&b, "version"); c0_builder_us_str(&b, "1");
+    c0_builder_rs_str(&b, "a"); c0_builder_eot(&b);
+    CHECK(built_is(&b, "\xe2\x90\x96\xe2\x90\x81" "version" "\xe2\x90\x9f" "1" "\xe2\x90\x9e" "a" "\xe2\x90\x84"));
+    c0_builder_free(&b);
+
+    /* etb bare and with a payload; em and a raw tail (pretty form cannot show
+     * a tail, so this one is checked as bytes); values keep the one-spelling rule */
+    c0_builder_init(&b);
+    c0_builder_rs_str(&b, " a "); c0_builder_etb(&b); c0_builder_rs_str(&b, "b"); c0_builder_etb_str(&b, "sha:1");
+    c0_builder_em_str(&b, "raw\x1e" "tail");
+    {
+        const uint8_t want[] = "\x1e\x02" " a " "\x03\x17\x1e" "b" "\x17" "sha:1" "\x19" "raw\x1e" "tail";
+        c0_bytes got = c0_builder_bytes(&b);
+        CHECK(c0_builder_status(&b) == C0_OK);
+        CHECK(got.len == sizeof(want) - 1 && memcmp(got.ptr, want, got.len) == 0);
+    }
+    c0_builder_free(&b);
+
+    /* mixes primitives with composed functions */
+    {
+        const char *h[] = {"h"};
+        c0_builder_init(&b);
+        c0_builder_rs_str(&b, "a");
+        c0_build_field_str(&b, "b");
+        c0_build_record(&b, NULL, 0);
+        c0_builder_us_str(&b, "c");
+        c0_builder_gs_str(&b, "g");
+        c0_build_key_str(&b, "k", "v");
+        c0_build_group_str(&b, "h");
+        c0_build_header_str(&b, h, 1);
+        c0_build_field_str(&b, "x");
+        CHECK(c0_builder_status(&b) == C0_OK);
+        CHECK(built_is(&b, "\xe2\x90\x9e" "a" "\xe2\x90\x9f" "b" "\xe2\x90\x9e\xe2\x90\x9f" "c" "\xe2\x90\x9d" "g" "\xe2\x90\x9e\xe2\x90\x81" "k" "\xe2\x90\x9f" "v"
+                            "\xe2\x90\x9d" "h" "\xe2\x90\x81\xe2\x90\x9e" "h" "\xe2\x90\x9e" "x"));
+        c0_builder_free(&b);
+    }
+
+    /* composed level after a primitive record; primitive us after a composed key */
+    c0_builder_init(&b);
+    c0_builder_rs_str(&b, "a");
+    c0_build_level_open(&b); c0_builder_rs_str(&b, "in"); c0_build_level_close(&b);
+    c0_build_key_str(&b, "k", "v"); c0_builder_us_str(&b, "w");
+    CHECK(built_is(&b, "\xe2\x90\x9e" "a" "\xe2\x90\x9f\xe2\x90\x90\xe2\x90\x9e" "in" "\xe2\x90\x98\xe2\x90\x81" "k" "\xe2\x90\x9f" "v" "\xe2\x90\x9f" "w"));
+    c0_builder_free(&b);
+
+    /* a CAN with no open level; a reference of four segments */
+    c0_builder_init(&b);
+    c0_builder_can(&b);
+    CHECK(c0_builder_status(&b) == C0_ERR_BAD_STATE);
+    c0_builder_free(&b);
+    {
+        const char *four[] = {"a", "b", "c", "d"};
+        c0_builder_init(&b);
+        c0_builder_rs(&b);
+        c0_builder_enq_path_str(&b, four, 4);
+        CHECK(c0_builder_status(&b) == C0_ERR_BAD_NAME);
+        c0_builder_free(&b);
+    }
+
+    /* names are validated in the primitives too */
+    c0_builder_init(&b);
+    c0_builder_soh_str(&b, "bad key");
+    CHECK(c0_builder_status(&b) == C0_OK); /* interior space is a plain name */
+    c0_builder_soh_str(&b, " edge");
+    CHECK(c0_builder_status(&b) == C0_ERR_BAD_NAME);
+    c0_builder_free(&b);
+
+    /* writes the same bytes through either layer */
+    {
+        const char *hdr[] = {"name", "amount"};
+        const char *alice[] = {"Alice", "1502.30"}, *bob[] = {"Bob", "3 40"};
+        const char *keys[] = {"host", "port"}, *vals[] = {"localhost", "5432"};
+        c0_bytes hb, lb;
+        c0_builder_init(&b);
+        c0_build_syn(&b);
+        c0_build_key_str(&b, "shape", "tabular");
+        c0_build_group_str(&b, "users");
+        c0_build_header_str(&b, hdr, 2);
+        c0_build_record_str(&b, alice, 2);
+        c0_build_record_str(&b, bob, 2);
+        c0_build_group_str(&b, "cfg");
+        c0_build_map_str(&b, keys, vals, 2);
+        c0_build_eot(&b);
+
+        c0_builder_init(&lo);
+        c0_builder_syn(&lo); c0_builder_soh_str(&lo, "shape"); c0_builder_us_str(&lo, "tabular");
+        c0_builder_gs_str(&lo, "users"); c0_builder_soh(&lo); c0_builder_rs_str(&lo, "name"); c0_builder_us_str(&lo, "amount");
+        c0_builder_rs_str(&lo, "Alice"); c0_builder_us_str(&lo, "1502.30");
+        c0_builder_rs_str(&lo, "Bob"); c0_builder_us_str(&lo, "3 40");
+        c0_builder_gs_str(&lo, "cfg"); c0_builder_rs(&lo);
+        c0_builder_soh_str(&lo, "host"); c0_builder_us_str(&lo, "localhost");
+        c0_builder_soh_str(&lo, "port"); c0_builder_us_str(&lo, "5432");
+        c0_builder_eot(&lo);
+
+        CHECK(c0_builder_status(&b) == C0_OK && c0_builder_status(&lo) == C0_OK);
+        hb = c0_builder_bytes(&b);
+        lb = c0_builder_bytes(&lo);
+        CHECK(hb.len == lb.len && memcmp(hb.ptr, lb.ptr, hb.len) == 0);
+        CHECK(c0_validate(lb.ptr, lb.len, NULL) == C0_OK);
+        {
+            c0_document doc;
+            CHECK(c0_document_read(lb.ptr, lb.len, 0, &doc, NULL) == C0_OK);
+            CHECK(c0_canonical(doc.body.buf + doc.body.start, doc.body.stop - doc.body.start));
+        }
+        c0_builder_free(&b);
+        c0_builder_free(&lo);
+    }
+}
+
 static void test_stream(void) {
     const uint8_t in[] = "\x1e" "a" "\x17" "sha:1" "\x1e\x02" "b" "\x17" "\x1e" "c" "\x17" "\x1e" "d";
     c0_stream s = c0_stream_read(in, sizeof(in) - 1);
@@ -394,6 +581,7 @@ int main(void) {
     test_document();
     test_blob();
     test_builder();
+    test_builder_primitives();
     test_stream();
     test_pretty();
     test_validate_errors();

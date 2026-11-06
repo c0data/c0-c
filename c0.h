@@ -411,10 +411,26 @@ c0_status c0_blob_str(const uint8_t *buf, size_t len, const char *name, c0_bytes
  * only the seven codes escaped. Names (file, group, header, key, reference
  * segment, ETB payload) must be plain, or C0_ERR_BAD_NAME is set.
  *
- * A record is opened by c0_build_record (or implicitly by the first
- * c0_build_field / c0_build_key / c0_build_level_open / c0_build_list /
- * c0_build_ref) and ended by the next structural call. Keyed units written
- * right after c0_build_syn belong to the heading, not to a record.
+ * Two layers. The primitives, `c0_builder_<code>`, are one function per
+ * code (fs gs rs us soh dle can bel enq syn eot etb em); each writes its code
+ * and, when given, what grammatically follows it, so a sequence of calls
+ * reads like the bytes:
+ *
+ *   c0_builder_rs_str(&b, "Alice"); c0_builder_us_str(&b, "1502.30");   ␞Alice␟1502.30
+ *   c0_builder_rs(&b); c0_builder_soh_str(&b, "host"); c0_builder_us_str(&b, "localhost");
+ *   c0_builder_bel(&b); c0_builder_gs_str(&b, "old");                   a dead group
+ *
+ * The composed functions, `c0_build_<what>` (file, group, header, record,
+ * field, map, key, level, list, ref, note), are built on the primitives and
+ * cannot write ill-formed output. The primitives write what you spell;
+ * well-formedness is then yours to keep. Both layers share the record state,
+ * so they mix.
+ *
+ * A record is opened by c0_build_record or c0_builder_rs (or implicitly by
+ * the first c0_build_field / c0_build_key / c0_build_level_open /
+ * c0_build_list / c0_build_ref) and ended by the next structural call. Keyed
+ * units written right after c0_build_syn belong to the heading, not to a
+ * record.
  */
 typedef struct {
     uint8_t *data;
@@ -432,6 +448,44 @@ void c0_builder_init(c0_builder *b);
 void c0_builder_free(c0_builder *b);
 c0_status c0_builder_status(const c0_builder *b);
 c0_bytes c0_builder_bytes(const c0_builder *b);
+
+/* primitives: one function per code. The bare form writes the code alone;
+ * the `_name` / `_value` / `_text` / `_payload` form writes the code and what
+ * follows it; `_str` is that form on a NUL-terminated string. Values take
+ * their one spelling (plain or text); names must be plain. */
+void c0_builder_fs(c0_builder *b, const uint8_t *name, size_t nlen);        /**< FS name; ends any open record */
+void c0_builder_gs(c0_builder *b);                                           /**< GS alone: one step of depth (gs, gs_name is depth 2) */
+void c0_builder_gs_name(c0_builder *b, const uint8_t *name, size_t nlen);   /**< GS name; ends any open record */
+void c0_builder_rs(c0_builder *b);                                           /**< RS: open a record */
+void c0_builder_rs_value(c0_builder *b, const uint8_t *value, size_t vlen); /**< RS and the record's first value */
+void c0_builder_us(c0_builder *b);                                           /**< US alone (an empty unit, or before DLE / ENQ) */
+void c0_builder_us_value(c0_builder *b, const uint8_t *value, size_t vlen); /**< US and the value that follows it */
+void c0_builder_soh(c0_builder *b);                                          /**< SOH alone: before RS, a header row */
+void c0_builder_soh_name(c0_builder *b, const uint8_t *name, size_t nlen);  /**< SOH key */
+void c0_builder_dle(c0_builder *b);                                          /**< DLE: open a level (saves the record state) */
+void c0_builder_can(c0_builder *b);                                          /**< CAN: close the innermost level; C0_ERR_BAD_STATE if none is open */
+void c0_builder_bel(c0_builder *b);                                          /**< BEL alone: the element that follows is dead */
+void c0_builder_bel_text(c0_builder *b, const uint8_t *text, size_t tlen);  /**< BEL and a note; empty text is C0_ERR_BAD_STATE */
+void c0_builder_enq(c0_builder *b, const uint8_t *name, size_t nlen);       /**< ENQ name */
+void c0_builder_enq_path(c0_builder *b, const c0_bytes *segments, size_t count); /**< ENQ STX seg US seg [US seg] ETX (one segment: ENQ name) */
+void c0_builder_syn(c0_builder *b);                                          /**< SYN; soh_name + us_value pairs that follow are the heading */
+void c0_builder_eot(c0_builder *b);                                          /**< EOT */
+void c0_builder_etb(c0_builder *b);                                          /**< ETB alone */
+void c0_builder_etb_payload(c0_builder *b, const uint8_t *payload, size_t plen); /**< ETB and a plain payload */
+void c0_builder_em(c0_builder *b, const uint8_t *tail, size_t tlen);        /**< EM and the raw tail; nothing may follow */
+
+void c0_builder_fs_str(c0_builder *b, const char *name);
+void c0_builder_gs_str(c0_builder *b, const char *name);
+void c0_builder_rs_str(c0_builder *b, const char *value);
+void c0_builder_us_str(c0_builder *b, const char *value);
+void c0_builder_soh_str(c0_builder *b, const char *name);
+void c0_builder_bel_str(c0_builder *b, const char *text);
+void c0_builder_enq_str(c0_builder *b, const char *name);
+void c0_builder_enq_path_str(c0_builder *b, const char *const *segments, size_t count);
+void c0_builder_etb_str(c0_builder *b, const char *payload);
+void c0_builder_em_str(c0_builder *b, const char *tail);
+
+/* composed: cannot write ill-formed output */
 
 /* documents */
 void c0_build_syn(c0_builder *b);                                     /**< SYN; keyed units until the next element are the heading */
@@ -1830,43 +1884,43 @@ static void c0__b_end_record(c0_builder *b) {
     b->units = 0;
 }
 
-static void c0__b_start_record(c0_builder *b) {
-    c0__b_byte(b, C0_RS);
-    b->state = C0__B_RECORD;
-    b->units = 0;
+/* The first value of a record, straight after RS. */
+static void c0__b_first_value(c0_builder *b, const uint8_t *p, size_t n) {
+    c0__b_value(b, p, n);
+    b->units = 1;
 }
 
+/* Position for the next unit of the open record (opening one if needed):
+ * US between units, nothing before the first. */
 static void c0__b_next_unit(c0_builder *b) {
-    if (b->state != C0__B_RECORD) c0__b_start_record(b);
-    if (b->units > 0) c0__b_byte(b, C0_US);
+    if (b->state != C0__B_RECORD) c0_builder_rs(b);
+    else if (b->units > 0) c0__b_byte(b, C0_US);
     b->units++;
 }
 
-static void c0__b_open_level(c0_builder *b) {
-    if (b->depth + 2 > b->stack_cap) {
-        size_t ncap = b->stack_cap ? b->stack_cap * 2 : 16;
-        int *ns = (int *)realloc(b->stack, ncap * sizeof(int) * 2);
-        if (!ns) {
-            if (b->status == C0_OK) b->status = C0_ERR_OOM;
-            return;
-        }
-        b->stack = ns;
-        b->stack_cap = ncap;
-    }
-    b->stack[2 * b->depth] = b->state;
-    b->stack[2 * b->depth + 1] = (int)b->units;
-    b->depth++;
-    b->state = C0__B_TOP;
-    b->units = 0;
-    c0__b_byte(b, C0_DLE);
+/* SOH key US, opening a record first unless one (or the heading) is open. */
+static void c0__b_key_head(c0_builder *b, const uint8_t *key, size_t klen) {
+    if (b->state == C0__B_TOP) c0_builder_rs(b);
+    c0_builder_soh_name(b, key, klen);
 }
 
-static void c0__b_key_head(c0_builder *b, const uint8_t *key, size_t klen) {
-    if (b->state == C0__B_TOP) c0__b_start_record(b);
-    c0__b_byte(b, C0_SOH);
-    c0__b_name(b, key, klen);
-    c0__b_byte(b, C0_US);
-    if (b->state == C0__B_RECORD) b->units++;
+static c0_bytes c0__cstr(const char *s) {
+    c0_bytes b;
+    b.ptr = (const uint8_t *)s;
+    b.len = strlen(s);
+    return b;
+}
+
+/* Build a c0_bytes array from C strings on the heap; NULL on OOM. */
+static c0_bytes *c0__cstrs(c0_builder *b, const char *const *strs, size_t count) {
+    c0_bytes *out = (c0_bytes *)malloc((count ? count : 1) * sizeof(c0_bytes));
+    size_t i;
+    if (!out) {
+        if (b->status == C0_OK) b->status = C0_ERR_OOM;
+        return NULL;
+    }
+    for (i = 0; i < count; i++) out[i] = c0__cstr(strs[i]);
+    return out;
 }
 
 void c0_builder_init(c0_builder *b) {
@@ -1889,92 +1943,73 @@ c0_bytes c0_builder_bytes(const c0_builder *b) {
     return r;
 }
 
-void c0_build_syn(c0_builder *b) {
-    c0__b_end_record(b);
-    c0__b_byte(b, C0_SYN);
-    b->state = C0__B_HEADING;
-}
+/* ---- primitives: one function per code ---- */
 
-void c0_build_eot(c0_builder *b) {
-    c0__b_end_record(b);
-    c0__b_byte(b, C0_EOT);
-}
-
-void c0_build_etb(c0_builder *b, const uint8_t *payload, size_t plen) {
-    c0__b_end_record(b);
-    c0__b_byte(b, C0_ETB);
-    if (payload && plen) c0__b_name(b, payload, plen);
-}
-
-void c0_build_em(c0_builder *b, const uint8_t *tail, size_t tlen) {
-    c0__b_end_record(b);
-    c0__b_byte(b, C0_EM);
-    c0__b_raw(b, tail, tlen);
-}
-
-void c0_build_file(c0_builder *b, const uint8_t *name, size_t nlen) {
+void c0_builder_fs(c0_builder *b, const uint8_t *name, size_t nlen) {
     c0__b_end_record(b);
     c0__b_byte(b, C0_FS);
     c0__b_name(b, name, nlen);
 }
 
-void c0_build_section(c0_builder *b, const uint8_t *name, size_t nlen, size_t depth) {
-    size_t i;
+void c0_builder_gs(c0_builder *b) {
     c0__b_end_record(b);
-    for (i = 0; i < depth; i++) c0__b_byte(b, C0_GS);
+    c0__b_byte(b, C0_GS);
+}
+
+void c0_builder_gs_name(c0_builder *b, const uint8_t *name, size_t nlen) {
+    c0_builder_gs(b);
     c0__b_name(b, name, nlen);
 }
 
-void c0_build_group(c0_builder *b, const uint8_t *name, size_t nlen) { c0_build_section(b, name, nlen, 1); }
-
-void c0_build_header(c0_builder *b, const c0_bytes *names, size_t count) {
-    size_t i;
-    c0__b_end_record(b);
-    c0__b_byte(b, C0_SOH);
+void c0_builder_rs(c0_builder *b) {
     c0__b_byte(b, C0_RS);
-    for (i = 0; i < count; i++) {
-        if (i) c0__b_byte(b, C0_US);
-        c0__b_name(b, names[i].ptr, names[i].len);
-    }
+    b->state = C0__B_RECORD;
+    b->units = 0;
 }
 
-void c0_build_record(c0_builder *b, const c0_bytes *fields, size_t count) {
-    size_t i;
-    c0__b_start_record(b);
-    for (i = 0; i < count; i++) {
-        if (i) c0__b_byte(b, C0_US);
-        c0__b_value(b, fields[i].ptr, fields[i].len);
-    }
-    b->units = count;
+void c0_builder_rs_value(c0_builder *b, const uint8_t *value, size_t vlen) {
+    c0_builder_rs(b);
+    c0__b_first_value(b, value, vlen);
 }
 
-void c0_build_field(c0_builder *b, const uint8_t *value, size_t vlen) {
-    c0__b_next_unit(b);
+void c0_builder_us(c0_builder *b) {
+    c0__b_byte(b, C0_US);
+    b->units++;
+}
+
+void c0_builder_us_value(c0_builder *b, const uint8_t *value, size_t vlen) {
+    c0__b_byte(b, C0_US);
     c0__b_value(b, value, vlen);
+    b->units++;
 }
 
-void c0_build_map(c0_builder *b, const c0_bytes *keys, const c0_bytes *values, size_t count) {
-    size_t i;
-    c0__b_start_record(b);
-    for (i = 0; i < count; i++) c0_build_key(b, keys[i].ptr, keys[i].len, values[i].ptr, values[i].len);
+void c0_builder_soh(c0_builder *b) { c0__b_byte(b, C0_SOH); }
+
+void c0_builder_soh_name(c0_builder *b, const uint8_t *name, size_t nlen) {
+    c0__b_byte(b, C0_SOH);
+    c0__b_name(b, name, nlen);
 }
 
-void c0_build_key(c0_builder *b, const uint8_t *key, size_t klen, const uint8_t *value, size_t vlen) {
-    c0__b_key_head(b, key, klen);
-    c0__b_value(b, value, vlen);
+void c0_builder_dle(c0_builder *b) {
+    if (b->depth + 2 > b->stack_cap) {
+        size_t ncap = b->stack_cap ? b->stack_cap * 2 : 16;
+        int *ns = (int *)realloc(b->stack, ncap * sizeof(int) * 2);
+        if (!ns) {
+            if (b->status == C0_OK) b->status = C0_ERR_OOM;
+            return;
+        }
+        b->stack = ns;
+        b->stack_cap = ncap;
+    }
+    b->stack[2 * b->depth] = b->state;
+    b->stack[2 * b->depth + 1] = (int)b->units;
+    b->depth++;
+    b->state = C0__B_TOP;
+    b->units = 0;
+    c0__b_byte(b, C0_DLE);
 }
 
-void c0_build_level_open(c0_builder *b) {
-    c0__b_next_unit(b);
-    c0__b_open_level(b);
-}
-
-void c0_build_key_level_open(c0_builder *b, const uint8_t *key, size_t klen) {
-    c0__b_key_head(b, key, klen);
-    c0__b_open_level(b);
-}
-
-void c0_build_level_close(c0_builder *b) {
+void c0_builder_can(c0_builder *b) {
     if (b->depth == 0) {
         if (b->status == C0_OK) b->status = C0_ERR_BAD_STATE;
         return;
@@ -1985,34 +2020,29 @@ void c0_build_level_close(c0_builder *b) {
     b->units = (size_t)b->stack[2 * b->depth + 1];
 }
 
-void c0_build_list(c0_builder *b, const c0_bytes *items, size_t count) {
-    size_t i;
-    c0__b_next_unit(b);
-    c0__b_byte(b, C0_DLE);
-    if (count) {
-        c0__b_byte(b, C0_RS);
-        for (i = 0; i < count; i++) {
-            if (i) c0__b_byte(b, C0_US);
-            c0__b_value(b, items[i].ptr, items[i].len);
-        }
+void c0_builder_bel(c0_builder *b) { c0__b_byte(b, C0_BEL); }
+
+void c0_builder_bel_text(c0_builder *b, const uint8_t *text, size_t tlen) {
+    if (tlen == 0) { /* a note needs content: bare BEL marks the next element dead */
+        if (b->status == C0_OK) b->status = C0_ERR_BAD_STATE;
+        return;
     }
-    c0__b_byte(b, C0_CAN);
+    c0__b_byte(b, C0_BEL);
+    c0__b_value(b, text, tlen);
 }
 
-void c0_build_ref(c0_builder *b, const uint8_t *name, size_t nlen) {
-    c0__b_next_unit(b);
+void c0_builder_enq(c0_builder *b, const uint8_t *name, size_t nlen) {
     c0__b_byte(b, C0_ENQ);
     if (nlen == 0 && b->status == C0_OK) b->status = C0_ERR_BAD_NAME;
     c0__b_name(b, name, nlen);
 }
 
-void c0_build_ref_path(c0_builder *b, const c0_bytes *segments, size_t count) {
+void c0_builder_enq_path(c0_builder *b, const c0_bytes *segments, size_t count) {
     size_t i;
     if (count == 1) {
-        c0_build_ref(b, segments[0].ptr, segments[0].len);
+        c0_builder_enq(b, segments[0].ptr, segments[0].len);
         return;
     }
-    c0__b_next_unit(b);
     c0__b_byte(b, C0_ENQ);
     if ((count < 2 || count > 3) && b->status == C0_OK) b->status = C0_ERR_BAD_NAME;
     c0__b_byte(b, C0_STX);
@@ -2024,11 +2054,148 @@ void c0_build_ref_path(c0_builder *b, const c0_bytes *segments, size_t count) {
     c0__b_byte(b, C0_ETX);
 }
 
-void c0_build_note(c0_builder *b, const uint8_t *text, size_t tlen) {
-    c0__b_byte(b, C0_BEL);
-    if (tlen == 0 && b->status == C0_OK) b->status = C0_ERR_BAD_STATE; /* a note needs content */
-    c0__b_value(b, text, tlen);
+void c0_builder_syn(c0_builder *b) {
+    c0__b_end_record(b);
+    c0__b_byte(b, C0_SYN);
+    b->state = C0__B_HEADING;
 }
+
+void c0_builder_eot(c0_builder *b) {
+    c0__b_end_record(b);
+    c0__b_byte(b, C0_EOT);
+}
+
+void c0_builder_etb(c0_builder *b) {
+    c0__b_end_record(b);
+    c0__b_byte(b, C0_ETB);
+}
+
+void c0_builder_etb_payload(c0_builder *b, const uint8_t *payload, size_t plen) {
+    c0_builder_etb(b);
+    c0__b_name(b, payload, plen);
+}
+
+void c0_builder_em(c0_builder *b, const uint8_t *tail, size_t tlen) {
+    c0__b_end_record(b);
+    c0__b_byte(b, C0_EM);
+    c0__b_raw(b, tail, tlen);
+}
+
+void c0_builder_fs_str(c0_builder *b, const char *name) { c0_bytes n = c0__cstr(name); c0_builder_fs(b, n.ptr, n.len); }
+void c0_builder_gs_str(c0_builder *b, const char *name) { c0_bytes n = c0__cstr(name); c0_builder_gs_name(b, n.ptr, n.len); }
+void c0_builder_rs_str(c0_builder *b, const char *value) { c0_bytes v = c0__cstr(value); c0_builder_rs_value(b, v.ptr, v.len); }
+void c0_builder_us_str(c0_builder *b, const char *value) { c0_bytes v = c0__cstr(value); c0_builder_us_value(b, v.ptr, v.len); }
+void c0_builder_soh_str(c0_builder *b, const char *name) { c0_bytes n = c0__cstr(name); c0_builder_soh_name(b, n.ptr, n.len); }
+void c0_builder_bel_str(c0_builder *b, const char *text) { c0_bytes t = c0__cstr(text); c0_builder_bel_text(b, t.ptr, t.len); }
+void c0_builder_enq_str(c0_builder *b, const char *name) { c0_bytes n = c0__cstr(name); c0_builder_enq(b, n.ptr, n.len); }
+void c0_builder_enq_path_str(c0_builder *b, const char *const *segments, size_t count) {
+    c0_bytes *v = c0__cstrs(b, segments, count);
+    if (!v) return;
+    c0_builder_enq_path(b, v, count);
+    free(v);
+}
+void c0_builder_etb_str(c0_builder *b, const char *payload) { c0_bytes p = c0__cstr(payload); c0_builder_etb_payload(b, p.ptr, p.len); }
+void c0_builder_em_str(c0_builder *b, const char *tail) { c0_bytes t = c0__cstr(tail); c0_builder_em(b, t.ptr, t.len); }
+
+/* ---- composed: wrappers over the primitives ---- */
+
+void c0_build_syn(c0_builder *b) { c0_builder_syn(b); }
+
+void c0_build_eot(c0_builder *b) { c0_builder_eot(b); }
+
+void c0_build_etb(c0_builder *b, const uint8_t *payload, size_t plen) {
+    if (payload && plen) c0_builder_etb_payload(b, payload, plen);
+    else c0_builder_etb(b);
+}
+
+void c0_build_em(c0_builder *b, const uint8_t *tail, size_t tlen) { c0_builder_em(b, tail, tlen); }
+
+void c0_build_file(c0_builder *b, const uint8_t *name, size_t nlen) { c0_builder_fs(b, name, nlen); }
+
+void c0_build_section(c0_builder *b, const uint8_t *name, size_t nlen, size_t depth) {
+    size_t i;
+    for (i = 1; i < depth; i++) c0_builder_gs(b);
+    c0_builder_gs_name(b, name, nlen);
+}
+
+void c0_build_group(c0_builder *b, const uint8_t *name, size_t nlen) { c0_builder_gs_name(b, name, nlen); }
+
+void c0_build_header(c0_builder *b, const c0_bytes *names, size_t count) {
+    size_t i;
+    for (i = 0; i < count; i++) { /* validate before writing anything */
+        if (!c0_is_name(names[i].ptr, names[i].len)) {
+            if (b->status == C0_OK) b->status = C0_ERR_BAD_NAME;
+            return;
+        }
+    }
+    c0__b_end_record(b);
+    c0_builder_soh(b);
+    c0_builder_rs(b);
+    for (i = 0; i < count; i++) {
+        if (i) c0_builder_us(b);
+        c0__b_raw(b, names[i].ptr, names[i].len);
+    }
+    c0__b_end_record(b);
+}
+
+void c0_build_record(c0_builder *b, const c0_bytes *fields, size_t count) {
+    size_t i;
+    c0_builder_rs(b);
+    for (i = 0; i < count; i++) c0_build_field(b, fields[i].ptr, fields[i].len);
+}
+
+void c0_build_field(c0_builder *b, const uint8_t *value, size_t vlen) {
+    if (b->state != C0__B_RECORD) c0_builder_rs_value(b, value, vlen);
+    else if (b->units == 0) c0__b_first_value(b, value, vlen);
+    else c0_builder_us_value(b, value, vlen);
+}
+
+void c0_build_map(c0_builder *b, const c0_bytes *keys, const c0_bytes *values, size_t count) {
+    size_t i;
+    c0_builder_rs(b);
+    for (i = 0; i < count; i++) c0_build_key(b, keys[i].ptr, keys[i].len, values[i].ptr, values[i].len);
+}
+
+void c0_build_key(c0_builder *b, const uint8_t *key, size_t klen, const uint8_t *value, size_t vlen) {
+    c0__b_key_head(b, key, klen);
+    c0_builder_us_value(b, value, vlen);
+}
+
+void c0_build_level_open(c0_builder *b) {
+    c0__b_next_unit(b);
+    c0_builder_dle(b);
+}
+
+void c0_build_key_level_open(c0_builder *b, const uint8_t *key, size_t klen) {
+    c0__b_key_head(b, key, klen);
+    c0_builder_us(b);
+    c0_builder_dle(b);
+}
+
+void c0_build_level_close(c0_builder *b) { c0_builder_can(b); }
+
+void c0_build_list(c0_builder *b, const c0_bytes *items, size_t count) {
+    size_t i;
+    c0__b_next_unit(b);
+    c0_builder_dle(b);
+    if (count) {
+        c0_builder_rs(b);
+        for (i = 0; i < count; i++) c0_build_field(b, items[i].ptr, items[i].len);
+    }
+    c0_builder_can(b);
+}
+
+void c0_build_ref(c0_builder *b, const uint8_t *name, size_t nlen) {
+    c0__b_next_unit(b);
+    c0_builder_enq(b, name, nlen);
+}
+
+void c0_build_ref_path(c0_builder *b, const c0_bytes *segments, size_t count) {
+    c0__b_next_unit(b);
+    c0_builder_enq_path(b, segments, count);
+}
+
+void c0_build_note(c0_builder *b, const uint8_t *text, size_t tlen) { c0_builder_bel_text(b, text, tlen); }
 
 void c0_build_block(c0_builder *b, const uint8_t *text, size_t tlen) {
     c0_bytes f;
@@ -2038,25 +2205,6 @@ void c0_build_block(c0_builder *b, const uint8_t *text, size_t tlen) {
 }
 
 void c0_build_item(c0_builder *b, const uint8_t *text, size_t tlen) { c0_build_field(b, text, tlen); }
-
-static c0_bytes c0__cstr(const char *s) {
-    c0_bytes b;
-    b.ptr = (const uint8_t *)s;
-    b.len = strlen(s);
-    return b;
-}
-
-/* Build a c0_bytes array from C strings on the heap; NULL on OOM. */
-static c0_bytes *c0__cstrs(c0_builder *b, const char *const *strs, size_t count) {
-    c0_bytes *out = (c0_bytes *)malloc((count ? count : 1) * sizeof(c0_bytes));
-    size_t i;
-    if (!out) {
-        if (b->status == C0_OK) b->status = C0_ERR_OOM;
-        return NULL;
-    }
-    for (i = 0; i < count; i++) out[i] = c0__cstr(strs[i]);
-    return out;
-}
 
 void c0_build_etb_str(c0_builder *b, const char *payload) {
     c0_bytes p = payload ? c0__cstr(payload) : c0__cstr("");
@@ -2080,7 +2228,7 @@ void c0_build_record_str(c0_builder *b, const char *const *fields, size_t count)
 void c0_build_field_str(c0_builder *b, const char *value) { c0_bytes v = c0__cstr(value); c0_build_field(b, v.ptr, v.len); }
 void c0_build_map_str(c0_builder *b, const char *const *keys, const char *const *values, size_t count) {
     size_t i;
-    c0__b_start_record(b);
+    c0_builder_rs(b);
     for (i = 0; i < count; i++) c0_build_key_str(b, keys[i], values[i]);
 }
 void c0_build_key_str(c0_builder *b, const char *key, const char *value) {

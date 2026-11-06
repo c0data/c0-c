@@ -84,6 +84,33 @@ case, `c0_unit_ref` for a reference. Documents come from `c0_documents` /
 `c0_next_document` (SYN heading, body, EOT, warnings); `c0_blob` reads a
 trailing blob declared in the heading's `blob` table.
 
+### Primitives
+
+Underneath, the builder has one function per code: `c0_builder_fs`, `_gs`,
+`_rs`, `_us`, `_soh`, `_dle`, `_can`, `_bel`, `_enq`, `_syn`, `_eot`, `_etb`,
+`_em`. Each writes its code and, when given, what follows it, so a sequence
+of calls reads like the bytes, and anything the grammar allows can be
+written. The bare form writes the code alone; `_name` / `_value` / `_text` /
+`_payload` (or `_str` on a C string) write the code and what follows it:
+
+```c
+c0_builder_rs_str(&b, "Alice"); c0_builder_us_str(&b, "1502.30");   /* ␞Alice␟1502.30 */
+c0_builder_rs(&b);                                                  /* ␞␁host␟localhost␁port␟5432 */
+c0_builder_soh_str(&b, "host"); c0_builder_us_str(&b, "localhost");
+c0_builder_soh_str(&b, "port"); c0_builder_us_str(&b, "5432");
+c0_builder_gs_str(&b, "users"); c0_builder_soh(&b);                 /* ␝users␁␞name␟amount: a header row */
+c0_builder_rs_str(&b, "name"); c0_builder_us_str(&b, "amount");
+c0_builder_bel(&b); c0_builder_gs_str(&b, "old");                   /* ␇␝old: a dead group */
+c0_builder_gs(&b); c0_builder_gs_str(&b, "sub");                    /* ␝␝sub: a group at depth 2 */
+```
+
+The composed `c0_build_*` functions above are built on these and cannot
+write ill-formed output; with the primitives, well-formedness is yours.
+Values keep their one spelling either way (there is no STX/ETX primitive),
+and names are still checked. The two layers share the record state and mix
+freely: `c0_builder_rs_str(&b, "a"); c0_build_field_str(&b, "b");` writes
+`␞a␟b`.
+
 ## Status
 
 Core (single-header) — done and tested:
@@ -92,7 +119,8 @@ Core (single-header) — done and tested:
   files / groups / records / units as cursors
 - validator (`c0_validate`) and canonical check (`c0_canonical`)
 - documents and containers (SYN heading, EOT, EM tail, warnings as bits)
-- builder (canonical spelling; names must be plain)
+- builder: one primitive per code (`c0_builder_rs` …) and composed `c0_build_*`
+  functions over them (canonical spelling; names must be plain)
 - ETB stream mode (`c0_stream_read`: committed region, damaged blocks,
   torn-tail detection, block cursor)
 - pretty form (Unicode Control Pictures): `c0_pretty_format` in compact,
