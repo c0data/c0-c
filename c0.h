@@ -31,7 +31,7 @@
 extern "C" {
 #endif
 
-#define C0_VERSION "1.0.0-dev"
+#define C0_VERSION "0.2.0"
 
 /* ---- Assigned control codes (DESIGN.md "Assigned Control Codes") ------ */
 #define C0_SOH 0x01 /**< Heading: a key for the value after it; SOH RS a header row */
