@@ -378,6 +378,18 @@ static void test_builder_primitives(void) {
     CHECK(built_is(&b, "\xe2\x90\x96\xe2\x90\x81" "version" "\xe2\x90\x9f" "1" "\xe2\x90\x9e" "a" "\xe2\x90\x84"));
     c0_builder_free(&b);
 
+    /* sub: C0-DIFF only; a replace-all and a one-substitution pattern; no unit counted */
+    c0_builder_init(&b);
+    c0_builder_fs_str(&b, "f"); c0_builder_rs_str(&b, "old"); c0_builder_sub_str(&b, "new");
+    c0_builder_gs_str(&b, "x"); c0_builder_us_str(&b, "10"); c0_builder_sub_str(&b, "20");
+    CHECK(built_is(&b, "\xe2\x90\x9c" "f" "\xe2\x90\x9e" "old" "\xe2\x90\x9a" "new" "\xe2\x90\x9d" "x" "\xe2\x90\x9f" "10" "\xe2\x90\x9a" "20"));
+    c0_builder_free(&b);
+    c0_builder_init(&b);
+    c0_builder_rs_str(&b, "a"); c0_builder_sub(&b); c0_builder_sub_str(&b, " b ");
+    c0_build_field_str(&b, "c"); /* the SUBs did not count: c is the second unit */
+    CHECK(built_is(&b, "\xe2\x90\x9e" "a" "\xe2\x90\x9a\xe2\x90\x9a\xe2\x90\x82" " b " "\xe2\x90\x83\xe2\x90\x9f" "c"));
+    c0_builder_free(&b);
+
     /* etb bare and with a payload; em and a raw tail (pretty form cannot show
      * a tail, so this one is checked as bytes); values keep the one-spelling rule */
     c0_builder_init(&b);

@@ -412,7 +412,7 @@ c0_status c0_blob_str(const uint8_t *buf, size_t len, const char *name, c0_bytes
  * segment, ETB payload) must be plain, or C0_ERR_BAD_NAME is set.
  *
  * Two layers. The primitives, `c0_builder_<code>`, are one function per
- * code (fs gs rs us soh dle can bel enq syn eot etb em); each writes its code
+ * code (fs gs rs us sub soh dle can bel enq syn eot etb em); each writes its code
  * and, when given, what grammatically follows it, so a sequence of calls
  * reads like the bytes:
  *
@@ -460,6 +460,8 @@ void c0_builder_rs(c0_builder *b);                                           /**
 void c0_builder_rs_value(c0_builder *b, const uint8_t *value, size_t vlen); /**< RS and the record's first value */
 void c0_builder_us(c0_builder *b);                                           /**< US alone (an empty unit, or before DLE / ENQ) */
 void c0_builder_us_value(c0_builder *b, const uint8_t *value, size_t vlen); /**< US and the value that follows it */
+void c0_builder_sub(c0_builder *b);                                          /**< SUB alone. C0-DIFF only: in a data body SUB is an error */
+void c0_builder_sub_value(c0_builder *b, const uint8_t *value, size_t vlen); /**< SUB and the new side of a substitution (C0-DIFF only): rs old, sub new is a replace-all */
 void c0_builder_soh(c0_builder *b);                                          /**< SOH alone: before RS, a header row */
 void c0_builder_soh_name(c0_builder *b, const uint8_t *name, size_t nlen);  /**< SOH key */
 void c0_builder_dle(c0_builder *b);                                          /**< DLE: open a level (saves the record state) */
@@ -478,6 +480,7 @@ void c0_builder_fs_str(c0_builder *b, const char *name);
 void c0_builder_gs_str(c0_builder *b, const char *name);
 void c0_builder_rs_str(c0_builder *b, const char *value);
 void c0_builder_us_str(c0_builder *b, const char *value);
+void c0_builder_sub_str(c0_builder *b, const char *value);
 void c0_builder_soh_str(c0_builder *b, const char *name);
 void c0_builder_bel_str(c0_builder *b, const char *text);
 void c0_builder_enq_str(c0_builder *b, const char *name);
@@ -1983,6 +1986,14 @@ void c0_builder_us_value(c0_builder *b, const uint8_t *value, size_t vlen) {
     b->units++;
 }
 
+/* SUB does not count as a unit: it is the new side of the unit before it. */
+void c0_builder_sub(c0_builder *b) { c0__b_byte(b, C0_SUB); }
+
+void c0_builder_sub_value(c0_builder *b, const uint8_t *value, size_t vlen) {
+    c0__b_byte(b, C0_SUB);
+    c0__b_value(b, value, vlen);
+}
+
 void c0_builder_soh(c0_builder *b) { c0__b_byte(b, C0_SOH); }
 
 void c0_builder_soh_name(c0_builder *b, const uint8_t *name, size_t nlen) {
@@ -2085,6 +2096,7 @@ void c0_builder_fs_str(c0_builder *b, const char *name) { c0_bytes n = c0__cstr(
 void c0_builder_gs_str(c0_builder *b, const char *name) { c0_bytes n = c0__cstr(name); c0_builder_gs_name(b, n.ptr, n.len); }
 void c0_builder_rs_str(c0_builder *b, const char *value) { c0_bytes v = c0__cstr(value); c0_builder_rs_value(b, v.ptr, v.len); }
 void c0_builder_us_str(c0_builder *b, const char *value) { c0_bytes v = c0__cstr(value); c0_builder_us_value(b, v.ptr, v.len); }
+void c0_builder_sub_str(c0_builder *b, const char *value) { c0_bytes v = c0__cstr(value); c0_builder_sub_value(b, v.ptr, v.len); }
 void c0_builder_soh_str(c0_builder *b, const char *name) { c0_bytes n = c0__cstr(name); c0_builder_soh_name(b, n.ptr, n.len); }
 void c0_builder_bel_str(c0_builder *b, const char *text) { c0_bytes t = c0__cstr(text); c0_builder_bel_text(b, t.ptr, t.len); }
 void c0_builder_enq_str(c0_builder *b, const char *name) { c0_bytes n = c0__cstr(name); c0_builder_enq(b, n.ptr, n.len); }

@@ -87,8 +87,8 @@ trailing blob declared in the heading's `blob` table.
 ### Primitives
 
 Underneath, the builder has one function per code: `c0_builder_fs`, `_gs`,
-`_rs`, `_us`, `_soh`, `_dle`, `_can`, `_bel`, `_enq`, `_syn`, `_eot`, `_etb`,
-`_em`. Each writes its code and, when given, what follows it, so a sequence
+`_rs`, `_us`, `_sub` (C0-DIFF only), `_soh`, `_dle`, `_can`, `_bel`, `_enq`,
+`_syn`, `_eot`, `_etb`, `_em`. Each writes its code and, when given, what follows it, so a sequence
 of calls reads like the bytes, and anything the grammar allows can be
 written. The bare form writes the code alone; `_name` / `_value` / `_text` /
 `_payload` (or `_str` on a C string) write the code and what follows it:
@@ -102,6 +102,7 @@ c0_builder_gs_str(&b, "users"); c0_builder_soh(&b);                 /* ␝users�
 c0_builder_rs_str(&b, "name"); c0_builder_us_str(&b, "amount");
 c0_builder_bel(&b); c0_builder_gs_str(&b, "old");                   /* ␇␝old: a dead group */
 c0_builder_gs(&b); c0_builder_gs_str(&b, "sub");                    /* ␝␝sub: a group at depth 2 */
+c0_builder_rs_str(&b, "old"); c0_builder_sub_str(&b, "new");       /* ␞old␚new: a C0-DIFF replace-all */
 ```
 
 The composed `c0_build_*` functions above are built on these and cannot
