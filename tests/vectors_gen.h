@@ -2792,120 +2792,123 @@ static void cf_invalid(void) {
   { /* reference-empty-name */
     static const unsigned char v1061[] = {0x1e,0x05,0x1f,0x78};
     CHECK(c0_validate(v1061,4,(c0_error*)0)!=C0_OK); }
-  { /* em-inside-level */
-    static const unsigned char v1062[] = {0x1e,0x10,0x1e,0x61,0x19,0x72,0x61,0x77};
+  { /* reference-segment-not-name */
+    static const unsigned char v1062[] = {0x1e,0x05,0x02,0x61,0x1f,0x20,0x62,0x03};
     CHECK(c0_validate(v1062,8,(c0_error*)0)!=C0_OK); }
+  { /* em-inside-level */
+    static const unsigned char v1063[] = {0x1e,0x10,0x1e,0x61,0x19,0x72,0x61,0x77};
+    CHECK(c0_validate(v1063,8,(c0_error*)0)!=C0_OK); }
   { /* em-inside-text */
-    static const unsigned char v1063[] = {0x1e,0x02,0x61,0x19,0x62,0x03};
-    CHECK(c0_validate(v1063,6,(c0_error*)0)!=C0_OK); }
+    static const unsigned char v1064[] = {0x1e,0x02,0x61,0x19,0x62,0x03};
+    CHECK(c0_validate(v1064,6,(c0_error*)0)!=C0_OK); }
   { /* bel-before-us */
-    static const unsigned char v1064[] = {0x1e,0x61,0x07,0x1f,0x62};
-    CHECK(c0_validate(v1064,5,(c0_error*)0)!=C0_OK); }
+    static const unsigned char v1065[] = {0x1e,0x61,0x07,0x1f,0x62};
+    CHECK(c0_validate(v1065,5,(c0_error*)0)!=C0_OK); }
   { /* bel-before-etb */
-    static const unsigned char v1065[] = {0x1e,0x61,0x07,0x17};
-    CHECK(c0_validate(v1065,4,(c0_error*)0)!=C0_OK); }
+    static const unsigned char v1066[] = {0x1e,0x61,0x07,0x17};
+    CHECK(c0_validate(v1066,4,(c0_error*)0)!=C0_OK); }
   { /* bel-before-can */
-    static const unsigned char v1066[] = {0x1e,0x10,0x1e,0x61,0x07,0x18};
-    CHECK(c0_validate(v1066,6,(c0_error*)0)!=C0_OK); }
+    static const unsigned char v1067[] = {0x1e,0x10,0x1e,0x61,0x07,0x18};
+    CHECK(c0_validate(v1067,6,(c0_error*)0)!=C0_OK); }
   { /* bel-before-enq */
-    static const unsigned char v1067[] = {0x1e,0x61,0x1f,0x07,0x05,0x74,0x61,0x67,0x73};
-    CHECK(c0_validate(v1067,9,(c0_error*)0)!=C0_OK); }
+    static const unsigned char v1068[] = {0x1e,0x61,0x1f,0x07,0x05,0x74,0x61,0x67,0x73};
+    CHECK(c0_validate(v1068,9,(c0_error*)0)!=C0_OK); }
   { /* bel-before-bel */
-    static const unsigned char v1068[] = {0x07,0x07,0x1e,0x78};
-    CHECK(c0_validate(v1068,4,(c0_error*)0)!=C0_OK); }
+    static const unsigned char v1069[] = {0x07,0x07,0x1e,0x78};
+    CHECK(c0_validate(v1069,4,(c0_error*)0)!=C0_OK); }
   { /* bel-at-end */
-    static const unsigned char v1069[] = {0x1e,0x61,0x07};
-    CHECK(c0_validate(v1069,3,(c0_error*)0)!=C0_OK); }
+    static const unsigned char v1070[] = {0x1e,0x61,0x07};
+    CHECK(c0_validate(v1070,3,(c0_error*)0)!=C0_OK); }
   { /* second-document-without-syn */
-    static const unsigned char v1070[] = {0x16,0x1e,0x61,0x04,0x1e,0x62};
-    CHECK(c0_validate(v1070,6,(c0_error*)0)!=C0_OK); }
+    static const unsigned char v1071[] = {0x16,0x1e,0x61,0x04,0x1e,0x62};
+    CHECK(c0_validate(v1071,6,(c0_error*)0)!=C0_OK); }
   { /* text-after-can */
-    static const unsigned char v1071[] = {0x1e,0x10,0x18,0x78};
-    CHECK(c0_validate(v1071,4,(c0_error*)0)!=C0_OK); }
+    static const unsigned char v1072[] = {0x1e,0x10,0x18,0x78};
+    CHECK(c0_validate(v1072,4,(c0_error*)0)!=C0_OK); }
   { /* mixed-record */
-    static const unsigned char v1072[] = {0x1e,0x61,0x01,0x6b,0x1f,0x76};
-    CHECK(c0_validate(v1072,6,(c0_error*)0)!=C0_OK); }
+    static const unsigned char v1073[] = {0x1e,0x61,0x01,0x6b,0x1f,0x76};
+    CHECK(c0_validate(v1073,6,(c0_error*)0)!=C0_OK); }
   { /* key-without-value */
-    static const unsigned char v1073[] = {0x1e,0x01,0x6b,0x1e,0x78};
-    CHECK(c0_validate(v1073,5,(c0_error*)0)!=C0_OK); }
+    static const unsigned char v1074[] = {0x1e,0x01,0x6b,0x1e,0x78};
+    CHECK(c0_validate(v1074,5,(c0_error*)0)!=C0_OK); }
   { /* name-with-text */
-    static const unsigned char v1074[] = {0x1d,0x02,0x67,0x03,0x1e,0x61};
-    CHECK(c0_validate(v1074,6,(c0_error*)0)!=C0_OK); }
+    static const unsigned char v1075[] = {0x1d,0x02,0x67,0x03,0x1e,0x61};
+    CHECK(c0_validate(v1075,6,(c0_error*)0)!=C0_OK); }
 }
 
 static void cf_stream(void) {
   { /* two-commits */
-    static const unsigned char v1075[] = {0x1e,0x61,0x17,0x1e,0x62,0x17};
-    c0_stream s = c0_stream_read(v1075,6);
+    static const unsigned char v1076[] = {0x1e,0x61,0x17,0x1e,0x62,0x17};
+    c0_stream s = c0_stream_read(v1076,6);
     CHECK(s.committed_end==6);
     CHECK(s.torn==0);
     CHECK(s.block_count==2);
     CHECK(s.damaged_count==0);
     { c0_block_iter bi = c0_stream_blocks(&s); c0_bytes blk; int dmg;
-      static const unsigned char v1076[] = {0x1e,0x61};
-      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1076,2) && dmg==0);
-      static const unsigned char v1077[] = {0x1e,0x62};
+      static const unsigned char v1077[] = {0x1e,0x61};
       CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1077,2) && dmg==0);
+      static const unsigned char v1078[] = {0x1e,0x62};
+      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1078,2) && dmg==0);
       CHECK(!c0_next_block(&bi,&blk,&dmg)); }
     { cf_recs rr; c0_record r; CHECK(cf_recs_init(&rr,&s));
       CHECK(cf_recs_next(&rr,&r));
       CHECK(!c0_record_keyed(r));
       CHECK(c0_record_count(r)==1);
-      static const unsigned char v1078[] = {0x61};
-      CHECK(cf_val_eq(r,0,v1078,1));
+      static const unsigned char v1079[] = {0x61};
+      CHECK(cf_val_eq(r,0,v1079,1));
       CHECK(cf_recs_next(&rr,&r));
       CHECK(!c0_record_keyed(r));
       CHECK(c0_record_count(r)==1);
-      static const unsigned char v1079[] = {0x62};
-      CHECK(cf_val_eq(r,0,v1079,1));
+      static const unsigned char v1080[] = {0x62};
+      CHECK(cf_val_eq(r,0,v1080,1));
       CHECK(!cf_recs_next(&rr,&r)); cf_recs_free(&rr); }
   }
   { /* torn-tail */
-    static const unsigned char v1080[] = {0x1e,0x61,0x17,0x1e,0x62};
-    c0_stream s = c0_stream_read(v1080,5);
+    static const unsigned char v1081[] = {0x1e,0x61,0x17,0x1e,0x62};
+    c0_stream s = c0_stream_read(v1081,5);
     CHECK(s.committed_end==3);
     CHECK(s.torn==1);
     CHECK(s.block_count==1);
     CHECK(s.damaged_count==0);
     { c0_block_iter bi = c0_stream_blocks(&s); c0_bytes blk; int dmg;
-      static const unsigned char v1081[] = {0x1e,0x61};
-      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1081,2) && dmg==0);
+      static const unsigned char v1082[] = {0x1e,0x61};
+      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1082,2) && dmg==0);
       CHECK(!c0_next_block(&bi,&blk,&dmg)); }
     { cf_recs rr; c0_record r; CHECK(cf_recs_init(&rr,&s));
       CHECK(cf_recs_next(&rr,&r));
       CHECK(!c0_record_keyed(r));
       CHECK(c0_record_count(r)==1);
-      static const unsigned char v1082[] = {0x61};
-      CHECK(cf_val_eq(r,0,v1082,1));
+      static const unsigned char v1083[] = {0x61};
+      CHECK(cf_val_eq(r,0,v1083,1));
       CHECK(!cf_recs_next(&rr,&r)); cf_recs_free(&rr); }
   }
   { /* batch-block */
-    static const unsigned char v1083[] = {0x1e,0x61,0x1e,0x62,0x17};
-    c0_stream s = c0_stream_read(v1083,5);
+    static const unsigned char v1084[] = {0x1e,0x61,0x1e,0x62,0x17};
+    c0_stream s = c0_stream_read(v1084,5);
     CHECK(s.committed_end==5);
     CHECK(s.torn==0);
     CHECK(s.block_count==1);
     CHECK(s.damaged_count==0);
     { c0_block_iter bi = c0_stream_blocks(&s); c0_bytes blk; int dmg;
-      static const unsigned char v1084[] = {0x1e,0x61,0x1e,0x62};
-      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1084,4) && dmg==0);
+      static const unsigned char v1085[] = {0x1e,0x61,0x1e,0x62};
+      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1085,4) && dmg==0);
       CHECK(!c0_next_block(&bi,&blk,&dmg)); }
     { cf_recs rr; c0_record r; CHECK(cf_recs_init(&rr,&s));
       CHECK(cf_recs_next(&rr,&r));
       CHECK(!c0_record_keyed(r));
       CHECK(c0_record_count(r)==1);
-      static const unsigned char v1085[] = {0x61};
-      CHECK(cf_val_eq(r,0,v1085,1));
+      static const unsigned char v1086[] = {0x61};
+      CHECK(cf_val_eq(r,0,v1086,1));
       CHECK(cf_recs_next(&rr,&r));
       CHECK(!c0_record_keyed(r));
       CHECK(c0_record_count(r)==1);
-      static const unsigned char v1086[] = {0x62};
-      CHECK(cf_val_eq(r,0,v1086,1));
+      static const unsigned char v1087[] = {0x62};
+      CHECK(cf_val_eq(r,0,v1087,1));
       CHECK(!cf_recs_next(&rr,&r)); cf_recs_free(&rr); }
   }
   { /* escaped-etb-in-text-not-commit */
-    static const unsigned char v1087[] = {0x1e,0x02,0x61,0x10,0x17,0x62,0x03};
-    c0_stream s = c0_stream_read(v1087,7);
+    static const unsigned char v1088[] = {0x1e,0x02,0x61,0x10,0x17,0x62,0x03};
+    c0_stream s = c0_stream_read(v1088,7);
     CHECK(s.committed_end==0);
     CHECK(s.torn==1);
     CHECK(s.block_count==0);
@@ -2914,201 +2917,220 @@ static void cf_stream(void) {
       CHECK(!c0_next_block(&bi,&blk,&dmg)); }
   }
   { /* etb-in-text-cuts */
-    static const unsigned char v1088[] = {0x1e,0x02,0x61,0x17,0x1e,0x62,0x17};
-    c0_stream s = c0_stream_read(v1088,7);
+    static const unsigned char v1089[] = {0x1e,0x02,0x61,0x17,0x1e,0x62,0x17};
+    c0_stream s = c0_stream_read(v1089,7);
     CHECK(s.committed_end==7);
     CHECK(s.torn==0);
     CHECK(s.block_count==2);
     CHECK(s.damaged_count==1);
     { c0_block_iter bi = c0_stream_blocks(&s); c0_bytes blk; int dmg;
-      static const unsigned char v1089[] = {0x1e,0x02,0x61};
-      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1089,3) && dmg==1);
-      static const unsigned char v1090[] = {0x1e,0x62};
-      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1090,2) && dmg==0);
+      static const unsigned char v1090[] = {0x1e,0x02,0x61};
+      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1090,3) && dmg==1);
+      static const unsigned char v1091[] = {0x1e,0x62};
+      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1091,2) && dmg==0);
       CHECK(!c0_next_block(&bi,&blk,&dmg)); }
   }
   { /* etb-in-level-cuts */
-    static const unsigned char v1091[] = {0x1e,0x10,0x1e,0x61,0x17,0x1e,0x62,0x17};
-    c0_stream s = c0_stream_read(v1091,8);
+    static const unsigned char v1092[] = {0x1e,0x10,0x1e,0x61,0x17,0x1e,0x62,0x17};
+    c0_stream s = c0_stream_read(v1092,8);
     CHECK(s.committed_end==8);
     CHECK(s.torn==0);
     CHECK(s.block_count==2);
     CHECK(s.damaged_count==1);
     { c0_block_iter bi = c0_stream_blocks(&s); c0_bytes blk; int dmg;
-      static const unsigned char v1092[] = {0x1e,0x10,0x1e,0x61};
-      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1092,4) && dmg==1);
-      static const unsigned char v1093[] = {0x1e,0x62};
-      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1093,2) && dmg==0);
+      static const unsigned char v1093[] = {0x1e,0x10,0x1e,0x61};
+      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1093,4) && dmg==1);
+      static const unsigned char v1094[] = {0x1e,0x62};
+      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1094,2) && dmg==0);
       CHECK(!c0_next_block(&bi,&blk,&dmg)); }
   }
   { /* heading-committed */
-    static const unsigned char v1094[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x73,0x74,0x72,0x65,0x61,0x6d,0x17,0x1e,0x61,0x17};
-    c0_stream s = c0_stream_read(v1094,18);
+    static const unsigned char v1095[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x73,0x74,0x72,0x65,0x61,0x6d,0x17,0x1e,0x61,0x17};
+    c0_stream s = c0_stream_read(v1095,18);
     CHECK(s.committed_end==18);
     CHECK(s.torn==0);
     CHECK(s.block_count==2);
     CHECK(s.damaged_count==0);
     { c0_block_iter bi = c0_stream_blocks(&s); c0_bytes blk; int dmg;
-      static const unsigned char v1095[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x73,0x74,0x72,0x65,0x61,0x6d};
-      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1095,14) && dmg==0);
-      static const unsigned char v1096[] = {0x1e,0x61};
-      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1096,2) && dmg==0);
+      static const unsigned char v1096[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x73,0x74,0x72,0x65,0x61,0x6d};
+      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1096,14) && dmg==0);
+      static const unsigned char v1097[] = {0x1e,0x61};
+      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1097,2) && dmg==0);
       CHECK(!c0_next_block(&bi,&blk,&dmg)); }
     { cf_recs rr; c0_record r; CHECK(cf_recs_init(&rr,&s));
       CHECK(cf_recs_next(&rr,&r));
       CHECK(!c0_record_keyed(r));
       CHECK(c0_record_count(r)==1);
-      static const unsigned char v1097[] = {0x61};
-      CHECK(cf_val_eq(r,0,v1097,1));
+      static const unsigned char v1098[] = {0x61};
+      CHECK(cf_val_eq(r,0,v1098,1));
       CHECK(!cf_recs_next(&rr,&r)); cf_recs_free(&rr); }
   }
   { /* header-row-committed */
-    static const unsigned char v1098[] = {0x01,0x1e,0x78,0x1f,0x79,0x17,0x1e,0x31,0x1f,0x32,0x17};
-    c0_stream s = c0_stream_read(v1098,11);
+    static const unsigned char v1099[] = {0x01,0x1e,0x78,0x1f,0x79,0x17,0x1e,0x31,0x1f,0x32,0x17};
+    c0_stream s = c0_stream_read(v1099,11);
     CHECK(s.committed_end==11);
     CHECK(s.torn==0);
     CHECK(s.block_count==2);
     CHECK(s.damaged_count==0);
     { c0_block_iter bi = c0_stream_blocks(&s); c0_bytes blk; int dmg;
-      static const unsigned char v1099[] = {0x01,0x1e,0x78,0x1f,0x79};
-      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1099,5) && dmg==0);
-      static const unsigned char v1100[] = {0x1e,0x31,0x1f,0x32};
-      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1100,4) && dmg==0);
+      static const unsigned char v1100[] = {0x01,0x1e,0x78,0x1f,0x79};
+      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1100,5) && dmg==0);
+      static const unsigned char v1101[] = {0x1e,0x31,0x1f,0x32};
+      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1101,4) && dmg==0);
       CHECK(!c0_next_block(&bi,&blk,&dmg)); }
     { cf_recs rr; c0_record r; CHECK(cf_recs_init(&rr,&s));
       CHECK(cf_recs_next(&rr,&r));
       CHECK(!c0_record_keyed(r));
       CHECK(c0_record_count(r)==2);
-      static const unsigned char v1101[] = {0x31};
-      CHECK(cf_val_eq(r,0,v1101,1));
-      static const unsigned char v1102[] = {0x32};
-      CHECK(cf_val_eq(r,1,v1102,1));
+      static const unsigned char v1102[] = {0x31};
+      CHECK(cf_val_eq(r,0,v1102,1));
+      static const unsigned char v1103[] = {0x32};
+      CHECK(cf_val_eq(r,1,v1103,1));
       CHECK(!cf_recs_next(&rr,&r)); cf_recs_free(&rr); }
   }
   { /* payload-in-committed-region */
-    static const unsigned char v1103[] = {0x1e,0x61,0x17,0x73,0x68,0x61,0x32,0x35,0x36,0x3a,0x30,0x30,0x1e,0x62,0x17};
-    c0_stream s = c0_stream_read(v1103,15);
+    static const unsigned char v1104[] = {0x1e,0x61,0x17,0x73,0x68,0x61,0x32,0x35,0x36,0x3a,0x30,0x30,0x1e,0x62,0x17};
+    c0_stream s = c0_stream_read(v1104,15);
     CHECK(s.committed_end==15);
     CHECK(s.torn==0);
     CHECK(s.block_count==2);
     CHECK(s.damaged_count==0);
     { c0_block_iter bi = c0_stream_blocks(&s); c0_bytes blk; int dmg;
-      static const unsigned char v1104[] = {0x1e,0x61};
-      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1104,2) && dmg==0);
-      static const unsigned char v1105[] = {0x1e,0x62};
+      static const unsigned char v1105[] = {0x1e,0x61};
       CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1105,2) && dmg==0);
+      static const unsigned char v1106[] = {0x1e,0x62};
+      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1106,2) && dmg==0);
       CHECK(!c0_next_block(&bi,&blk,&dmg)); }
     { cf_recs rr; c0_record r; CHECK(cf_recs_init(&rr,&s));
       CHECK(cf_recs_next(&rr,&r));
       CHECK(!c0_record_keyed(r));
       CHECK(c0_record_count(r)==1);
-      static const unsigned char v1106[] = {0x61};
-      CHECK(cf_val_eq(r,0,v1106,1));
+      static const unsigned char v1107[] = {0x61};
+      CHECK(cf_val_eq(r,0,v1107,1));
       CHECK(cf_recs_next(&rr,&r));
       CHECK(!c0_record_keyed(r));
       CHECK(c0_record_count(r)==1);
-      static const unsigned char v1107[] = {0x62};
-      CHECK(cf_val_eq(r,0,v1107,1));
+      static const unsigned char v1108[] = {0x62};
+      CHECK(cf_val_eq(r,0,v1108,1));
       CHECK(!cf_recs_next(&rr,&r)); cf_recs_free(&rr); }
   }
   { /* torn-open-text */
-    static const unsigned char v1108[] = {0x1e,0x61,0x17,0x1e,0x02,0x62};
-    c0_stream s = c0_stream_read(v1108,6);
+    static const unsigned char v1109[] = {0x1e,0x61,0x17,0x1e,0x02,0x62};
+    c0_stream s = c0_stream_read(v1109,6);
     CHECK(s.committed_end==3);
     CHECK(s.torn==1);
     CHECK(s.block_count==1);
     CHECK(s.damaged_count==0);
     { c0_block_iter bi = c0_stream_blocks(&s); c0_bytes blk; int dmg;
-      static const unsigned char v1109[] = {0x1e,0x61};
-      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1109,2) && dmg==0);
+      static const unsigned char v1110[] = {0x1e,0x61};
+      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1110,2) && dmg==0);
       CHECK(!c0_next_block(&bi,&blk,&dmg)); }
     { cf_recs rr; c0_record r; CHECK(cf_recs_init(&rr,&s));
       CHECK(cf_recs_next(&rr,&r));
       CHECK(!c0_record_keyed(r));
       CHECK(c0_record_count(r)==1);
-      static const unsigned char v1110[] = {0x61};
-      CHECK(cf_val_eq(r,0,v1110,1));
+      static const unsigned char v1111[] = {0x61};
+      CHECK(cf_val_eq(r,0,v1111,1));
       CHECK(!cf_recs_next(&rr,&r)); cf_recs_free(&rr); }
   }
   { /* torn-lone-dle */
-    static const unsigned char v1111[] = {0x1e,0x61,0x17,0x1e,0x02,0x62,0x10};
-    c0_stream s = c0_stream_read(v1111,7);
+    static const unsigned char v1112[] = {0x1e,0x61,0x17,0x1e,0x02,0x62,0x10};
+    c0_stream s = c0_stream_read(v1112,7);
     CHECK(s.committed_end==3);
     CHECK(s.torn==1);
     CHECK(s.block_count==1);
     CHECK(s.damaged_count==0);
     { c0_block_iter bi = c0_stream_blocks(&s); c0_bytes blk; int dmg;
-      static const unsigned char v1112[] = {0x1e,0x61};
-      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1112,2) && dmg==0);
+      static const unsigned char v1113[] = {0x1e,0x61};
+      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1113,2) && dmg==0);
       CHECK(!c0_next_block(&bi,&blk,&dmg)); }
     { cf_recs rr; c0_record r; CHECK(cf_recs_init(&rr,&s));
       CHECK(cf_recs_next(&rr,&r));
       CHECK(!c0_record_keyed(r));
       CHECK(c0_record_count(r)==1);
-      static const unsigned char v1113[] = {0x61};
-      CHECK(cf_val_eq(r,0,v1113,1));
+      static const unsigned char v1114[] = {0x61};
+      CHECK(cf_val_eq(r,0,v1114,1));
+      CHECK(!cf_recs_next(&rr,&r)); cf_recs_free(&rr); }
+  }
+  { /* em-tail-not-torn */
+    static const unsigned char v1115[] = {0x1e,0x61,0x17,0x19,0x72,0x61,0x77};
+    c0_stream s = c0_stream_read(v1115,7);
+    CHECK(s.committed_end==3);
+    CHECK(s.torn==0);
+    CHECK(s.block_count==1);
+    CHECK(s.damaged_count==0);
+    { c0_block_iter bi = c0_stream_blocks(&s); c0_bytes blk; int dmg;
+      static const unsigned char v1116[] = {0x1e,0x61};
+      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1116,2) && dmg==0);
+      CHECK(!c0_next_block(&bi,&blk,&dmg)); }
+    { cf_recs rr; c0_record r; CHECK(cf_recs_init(&rr,&s));
+      CHECK(cf_recs_next(&rr,&r));
+      CHECK(!c0_record_keyed(r));
+      CHECK(c0_record_count(r)==1);
+      static const unsigned char v1117[] = {0x61};
+      CHECK(cf_val_eq(r,0,v1117,1));
       CHECK(!cf_recs_next(&rr,&r)); cf_recs_free(&rr); }
   }
   { /* tail-only-layout */
-    static const unsigned char v1114[] = {0x1e,0x61,0x17,0x0a};
-    c0_stream s = c0_stream_read(v1114,4);
+    static const unsigned char v1118[] = {0x1e,0x61,0x17,0x0a};
+    c0_stream s = c0_stream_read(v1118,4);
     CHECK(s.committed_end==3);
     CHECK(s.torn==0);
     CHECK(s.block_count==1);
     CHECK(s.damaged_count==0);
     { c0_block_iter bi = c0_stream_blocks(&s); c0_bytes blk; int dmg;
-      static const unsigned char v1115[] = {0x1e,0x61};
-      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1115,2) && dmg==0);
+      static const unsigned char v1119[] = {0x1e,0x61};
+      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1119,2) && dmg==0);
       CHECK(!c0_next_block(&bi,&blk,&dmg)); }
     { cf_recs rr; c0_record r; CHECK(cf_recs_init(&rr,&s));
       CHECK(cf_recs_next(&rr,&r));
       CHECK(!c0_record_keyed(r));
       CHECK(c0_record_count(r)==1);
-      static const unsigned char v1116[] = {0x61};
-      CHECK(cf_val_eq(r,0,v1116,1));
+      static const unsigned char v1120[] = {0x61};
+      CHECK(cf_val_eq(r,0,v1120,1));
       CHECK(!cf_recs_next(&rr,&r)); cf_recs_free(&rr); }
   }
   { /* tail-eot */
-    static const unsigned char v1117[] = {0x1e,0x61,0x17,0x04};
-    c0_stream s = c0_stream_read(v1117,4);
+    static const unsigned char v1121[] = {0x1e,0x61,0x17,0x04};
+    c0_stream s = c0_stream_read(v1121,4);
     CHECK(s.committed_end==3);
     CHECK(s.torn==0);
     CHECK(s.block_count==1);
     CHECK(s.damaged_count==0);
     { c0_block_iter bi = c0_stream_blocks(&s); c0_bytes blk; int dmg;
-      static const unsigned char v1118[] = {0x1e,0x61};
-      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1118,2) && dmg==0);
+      static const unsigned char v1122[] = {0x1e,0x61};
+      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1122,2) && dmg==0);
       CHECK(!c0_next_block(&bi,&blk,&dmg)); }
     { cf_recs rr; c0_record r; CHECK(cf_recs_init(&rr,&s));
       CHECK(cf_recs_next(&rr,&r));
       CHECK(!c0_record_keyed(r));
       CHECK(c0_record_count(r)==1);
-      static const unsigned char v1119[] = {0x61};
-      CHECK(cf_val_eq(r,0,v1119,1));
+      static const unsigned char v1123[] = {0x61};
+      CHECK(cf_val_eq(r,0,v1123,1));
       CHECK(!cf_recs_next(&rr,&r)); cf_recs_free(&rr); }
   }
   { /* tail-comment */
-    static const unsigned char v1120[] = {0x1e,0x61,0x17,0x07,0x62,0x79,0x65};
-    c0_stream s = c0_stream_read(v1120,7);
+    static const unsigned char v1124[] = {0x1e,0x61,0x17,0x07,0x62,0x79,0x65};
+    c0_stream s = c0_stream_read(v1124,7);
     CHECK(s.committed_end==3);
     CHECK(s.torn==0);
     CHECK(s.block_count==1);
     CHECK(s.damaged_count==0);
     { c0_block_iter bi = c0_stream_blocks(&s); c0_bytes blk; int dmg;
-      static const unsigned char v1121[] = {0x1e,0x61};
-      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1121,2) && dmg==0);
+      static const unsigned char v1125[] = {0x1e,0x61};
+      CHECK(c0_next_block(&bi,&blk,&dmg) && cf_eq(blk,v1125,2) && dmg==0);
       CHECK(!c0_next_block(&bi,&blk,&dmg)); }
     { cf_recs rr; c0_record r; CHECK(cf_recs_init(&rr,&s));
       CHECK(cf_recs_next(&rr,&r));
       CHECK(!c0_record_keyed(r));
       CHECK(c0_record_count(r)==1);
-      static const unsigned char v1122[] = {0x61};
-      CHECK(cf_val_eq(r,0,v1122,1));
+      static const unsigned char v1126[] = {0x61};
+      CHECK(cf_val_eq(r,0,v1126,1));
       CHECK(!cf_recs_next(&rr,&r)); cf_recs_free(&rr); }
   }
   { /* empty-stream */
-    static const unsigned char v1123[1] = {0};
-    c0_stream s = c0_stream_read(v1123,0);
+    static const unsigned char v1127[1] = {0};
+    c0_stream s = c0_stream_read(v1127,0);
     CHECK(s.committed_end==0);
     CHECK(s.torn==0);
     CHECK(s.block_count==0);
@@ -3120,476 +3142,476 @@ static void cf_stream(void) {
 
 static void cf_nested(void) {
   { /* three-items */
-    static const unsigned char v1124[] = {0x1e,0x41,0x6c,0x69,0x63,0x65,0x1f,0x10,0x1e,0x41,0x64,0x6d,0x69,0x6e,0x1f,0x45,0x64,0x69,0x74,0x6f,0x72,0x1f,0x55,0x73,0x65,0x72,0x18,0x1f,0x31,0x30,0x30};
-    c0_body body = c0_body_view(v1124,31);
-    CHECK(c0_validate(v1124,31,(c0_error*)0)==C0_OK);
+    static const unsigned char v1128[] = {0x1e,0x41,0x6c,0x69,0x63,0x65,0x1f,0x10,0x1e,0x41,0x64,0x6d,0x69,0x6e,0x1f,0x45,0x64,0x69,0x74,0x6f,0x72,0x1f,0x55,0x73,0x65,0x72,0x18,0x1f,0x31,0x30,0x30};
+    c0_body body = c0_body_view(v1128,31);
+    CHECK(c0_validate(v1128,31,(c0_error*)0)==C0_OK);
     { c0_record_iter ri = c0_body_records(body); c0_record r;
       CHECK(c0_next_record(&ri,&r));
       CHECK(c0_record_count(r)==3);
-      static const unsigned char v1125[] = {0x41,0x6c,0x69,0x63,0x65};
-      CHECK(cf_val_eq(r,0,v1125,5));
-      { c0_unit_iter li1126; c0_bytes raw, item; CHECK(c0_record_field(r,1,&raw)==C0_OK);
-        CHECK(c0_unit_list(raw,&li1126)==C0_OK);
-        static const unsigned char v1127[] = {0x41,0x64,0x6d,0x69,0x6e};
-        CHECK(c0_next_unit(&li1126,&item) && cf_raw_eq(item,v1127,5));
-        static const unsigned char v1128[] = {0x45,0x64,0x69,0x74,0x6f,0x72};
-        CHECK(c0_next_unit(&li1126,&item) && cf_raw_eq(item,v1128,6));
-        static const unsigned char v1129[] = {0x55,0x73,0x65,0x72};
-        CHECK(c0_next_unit(&li1126,&item) && cf_raw_eq(item,v1129,4));
-        CHECK(!c0_next_unit(&li1126,&item)); }
-      static const unsigned char v1130[] = {0x31,0x30,0x30};
-      CHECK(cf_val_eq(r,2,v1130,3));
+      static const unsigned char v1129[] = {0x41,0x6c,0x69,0x63,0x65};
+      CHECK(cf_val_eq(r,0,v1129,5));
+      { c0_unit_iter li1130; c0_bytes raw, item; CHECK(c0_record_field(r,1,&raw)==C0_OK);
+        CHECK(c0_unit_list(raw,&li1130)==C0_OK);
+        static const unsigned char v1131[] = {0x41,0x64,0x6d,0x69,0x6e};
+        CHECK(c0_next_unit(&li1130,&item) && cf_raw_eq(item,v1131,5));
+        static const unsigned char v1132[] = {0x45,0x64,0x69,0x74,0x6f,0x72};
+        CHECK(c0_next_unit(&li1130,&item) && cf_raw_eq(item,v1132,6));
+        static const unsigned char v1133[] = {0x55,0x73,0x65,0x72};
+        CHECK(c0_next_unit(&li1130,&item) && cf_raw_eq(item,v1133,4));
+        CHECK(!c0_next_unit(&li1130,&item)); }
+      static const unsigned char v1134[] = {0x31,0x30,0x30};
+      CHECK(cf_val_eq(r,2,v1134,3));
       CHECK(!c0_next_record(&ri,&r)); }
     { c0_builder bld; c0_builder_init(&bld);
       c0_build_record(&bld,(const c0_bytes*)0,0);
-      static const unsigned char v1131[] = {0x41,0x6c,0x69,0x63,0x65};
-      c0_build_field(&bld,v1131,5);
+      static const unsigned char v1135[] = {0x41,0x6c,0x69,0x63,0x65};
+      c0_build_field(&bld,v1135,5);
       {
-        static const unsigned char v1132[] = {0x41,0x64,0x6d,0x69,0x6e};
-        static const unsigned char v1133[] = {0x45,0x64,0x69,0x74,0x6f,0x72};
-        static const unsigned char v1134[] = {0x55,0x73,0x65,0x72};
-        c0_bytes B1135[] = {{v1132,5},{v1133,6},{v1134,4}};
-        c0_build_list(&bld,B1135,3); }
-      static const unsigned char v1136[] = {0x31,0x30,0x30};
-      c0_build_field(&bld,v1136,3);
-      static const unsigned char v1137[] = {0x1e,0x41,0x6c,0x69,0x63,0x65,0x1f,0x10,0x1e,0x41,0x64,0x6d,0x69,0x6e,0x1f,0x45,0x64,0x69,0x74,0x6f,0x72,0x1f,0x55,0x73,0x65,0x72,0x18,0x1f,0x31,0x30,0x30};
+        static const unsigned char v1136[] = {0x41,0x64,0x6d,0x69,0x6e};
+        static const unsigned char v1137[] = {0x45,0x64,0x69,0x74,0x6f,0x72};
+        static const unsigned char v1138[] = {0x55,0x73,0x65,0x72};
+        c0_bytes B1139[] = {{v1136,5},{v1137,6},{v1138,4}};
+        c0_build_list(&bld,B1139,3); }
+      static const unsigned char v1140[] = {0x31,0x30,0x30};
+      c0_build_field(&bld,v1140,3);
+      static const unsigned char v1141[] = {0x1e,0x41,0x6c,0x69,0x63,0x65,0x1f,0x10,0x1e,0x41,0x64,0x6d,0x69,0x6e,0x1f,0x45,0x64,0x69,0x74,0x6f,0x72,0x1f,0x55,0x73,0x65,0x72,0x18,0x1f,0x31,0x30,0x30};
       CHECK(c0_builder_status(&bld)==C0_OK);
-      { c0_bytes got=c0_builder_bytes(&bld); CHECK(cf_eq(got,v1137,31));
+      { c0_bytes got=c0_builder_bytes(&bld); CHECK(cf_eq(got,v1141,31));
         CHECK(c0_canonical(got.ptr,got.len)); }
       c0_builder_free(&bld); }
   }
   { /* one-empty-item */
-    static const unsigned char v1138[] = {0x1e,0x61,0x1f,0x10,0x1e,0x18};
-    c0_body body = c0_body_view(v1138,6);
-    CHECK(c0_validate(v1138,6,(c0_error*)0)==C0_OK);
+    static const unsigned char v1142[] = {0x1e,0x61,0x1f,0x10,0x1e,0x18};
+    c0_body body = c0_body_view(v1142,6);
+    CHECK(c0_validate(v1142,6,(c0_error*)0)==C0_OK);
     { c0_record_iter ri = c0_body_records(body); c0_record r;
       CHECK(c0_next_record(&ri,&r));
       CHECK(c0_record_count(r)==2);
-      static const unsigned char v1139[] = {0x61};
-      CHECK(cf_val_eq(r,0,v1139,1));
-      { c0_unit_iter li1140; c0_bytes raw, item; CHECK(c0_record_field(r,1,&raw)==C0_OK);
-        CHECK(c0_unit_list(raw,&li1140)==C0_OK);
-        static const unsigned char v1141[1] = {0};
-        CHECK(c0_next_unit(&li1140,&item) && cf_raw_eq(item,v1141,0));
-        CHECK(!c0_next_unit(&li1140,&item)); }
+      static const unsigned char v1143[] = {0x61};
+      CHECK(cf_val_eq(r,0,v1143,1));
+      { c0_unit_iter li1144; c0_bytes raw, item; CHECK(c0_record_field(r,1,&raw)==C0_OK);
+        CHECK(c0_unit_list(raw,&li1144)==C0_OK);
+        static const unsigned char v1145[1] = {0};
+        CHECK(c0_next_unit(&li1144,&item) && cf_raw_eq(item,v1145,0));
+        CHECK(!c0_next_unit(&li1144,&item)); }
       CHECK(!c0_next_record(&ri,&r)); }
     { c0_builder bld; c0_builder_init(&bld);
       c0_build_record(&bld,(const c0_bytes*)0,0);
-      static const unsigned char v1142[] = {0x61};
-      c0_build_field(&bld,v1142,1);
+      static const unsigned char v1146[] = {0x61};
+      c0_build_field(&bld,v1146,1);
       {
-        static const unsigned char v1143[1] = {0};
-        c0_bytes B1144[] = {{v1143,0}};
-        c0_build_list(&bld,B1144,1); }
-      static const unsigned char v1145[] = {0x1e,0x61,0x1f,0x10,0x1e,0x18};
+        static const unsigned char v1147[1] = {0};
+        c0_bytes B1148[] = {{v1147,0}};
+        c0_build_list(&bld,B1148,1); }
+      static const unsigned char v1149[] = {0x1e,0x61,0x1f,0x10,0x1e,0x18};
       CHECK(c0_builder_status(&bld)==C0_OK);
-      { c0_bytes got=c0_builder_bytes(&bld); CHECK(cf_eq(got,v1145,6));
+      { c0_bytes got=c0_builder_bytes(&bld); CHECK(cf_eq(got,v1149,6));
         CHECK(c0_canonical(got.ptr,got.len)); }
       c0_builder_free(&bld); }
   }
   { /* two-empty-items */
-    static const unsigned char v1146[] = {0x1e,0x61,0x1f,0x10,0x1e,0x1f,0x18};
-    c0_body body = c0_body_view(v1146,7);
-    CHECK(c0_validate(v1146,7,(c0_error*)0)==C0_OK);
+    static const unsigned char v1150[] = {0x1e,0x61,0x1f,0x10,0x1e,0x1f,0x18};
+    c0_body body = c0_body_view(v1150,7);
+    CHECK(c0_validate(v1150,7,(c0_error*)0)==C0_OK);
     { c0_record_iter ri = c0_body_records(body); c0_record r;
       CHECK(c0_next_record(&ri,&r));
       CHECK(c0_record_count(r)==2);
-      static const unsigned char v1147[] = {0x61};
-      CHECK(cf_val_eq(r,0,v1147,1));
-      { c0_unit_iter li1148; c0_bytes raw, item; CHECK(c0_record_field(r,1,&raw)==C0_OK);
-        CHECK(c0_unit_list(raw,&li1148)==C0_OK);
-        static const unsigned char v1149[1] = {0};
-        CHECK(c0_next_unit(&li1148,&item) && cf_raw_eq(item,v1149,0));
-        static const unsigned char v1150[1] = {0};
-        CHECK(c0_next_unit(&li1148,&item) && cf_raw_eq(item,v1150,0));
-        CHECK(!c0_next_unit(&li1148,&item)); }
+      static const unsigned char v1151[] = {0x61};
+      CHECK(cf_val_eq(r,0,v1151,1));
+      { c0_unit_iter li1152; c0_bytes raw, item; CHECK(c0_record_field(r,1,&raw)==C0_OK);
+        CHECK(c0_unit_list(raw,&li1152)==C0_OK);
+        static const unsigned char v1153[1] = {0};
+        CHECK(c0_next_unit(&li1152,&item) && cf_raw_eq(item,v1153,0));
+        static const unsigned char v1154[1] = {0};
+        CHECK(c0_next_unit(&li1152,&item) && cf_raw_eq(item,v1154,0));
+        CHECK(!c0_next_unit(&li1152,&item)); }
       CHECK(!c0_next_record(&ri,&r)); }
     { c0_builder bld; c0_builder_init(&bld);
       c0_build_record(&bld,(const c0_bytes*)0,0);
-      static const unsigned char v1151[] = {0x61};
-      c0_build_field(&bld,v1151,1);
+      static const unsigned char v1155[] = {0x61};
+      c0_build_field(&bld,v1155,1);
       {
-        static const unsigned char v1152[1] = {0};
-        static const unsigned char v1153[1] = {0};
-        c0_bytes B1154[] = {{v1152,0},{v1153,0}};
-        c0_build_list(&bld,B1154,2); }
-      static const unsigned char v1155[] = {0x1e,0x61,0x1f,0x10,0x1e,0x1f,0x18};
+        static const unsigned char v1156[1] = {0};
+        static const unsigned char v1157[1] = {0};
+        c0_bytes B1158[] = {{v1156,0},{v1157,0}};
+        c0_build_list(&bld,B1158,2); }
+      static const unsigned char v1159[] = {0x1e,0x61,0x1f,0x10,0x1e,0x1f,0x18};
       CHECK(c0_builder_status(&bld)==C0_OK);
-      { c0_bytes got=c0_builder_bytes(&bld); CHECK(cf_eq(got,v1155,7));
+      { c0_bytes got=c0_builder_bytes(&bld); CHECK(cf_eq(got,v1159,7));
         CHECK(c0_canonical(got.ptr,got.len)); }
       c0_builder_free(&bld); }
   }
   { /* single-item */
-    static const unsigned char v1156[] = {0x1e,0x61,0x1f,0x10,0x1e,0x78,0x18};
-    c0_body body = c0_body_view(v1156,7);
-    CHECK(c0_validate(v1156,7,(c0_error*)0)==C0_OK);
+    static const unsigned char v1160[] = {0x1e,0x61,0x1f,0x10,0x1e,0x78,0x18};
+    c0_body body = c0_body_view(v1160,7);
+    CHECK(c0_validate(v1160,7,(c0_error*)0)==C0_OK);
     { c0_record_iter ri = c0_body_records(body); c0_record r;
       CHECK(c0_next_record(&ri,&r));
       CHECK(c0_record_count(r)==2);
-      static const unsigned char v1157[] = {0x61};
-      CHECK(cf_val_eq(r,0,v1157,1));
-      { c0_unit_iter li1158; c0_bytes raw, item; CHECK(c0_record_field(r,1,&raw)==C0_OK);
-        CHECK(c0_unit_list(raw,&li1158)==C0_OK);
-        static const unsigned char v1159[] = {0x78};
-        CHECK(c0_next_unit(&li1158,&item) && cf_raw_eq(item,v1159,1));
-        CHECK(!c0_next_unit(&li1158,&item)); }
+      static const unsigned char v1161[] = {0x61};
+      CHECK(cf_val_eq(r,0,v1161,1));
+      { c0_unit_iter li1162; c0_bytes raw, item; CHECK(c0_record_field(r,1,&raw)==C0_OK);
+        CHECK(c0_unit_list(raw,&li1162)==C0_OK);
+        static const unsigned char v1163[] = {0x78};
+        CHECK(c0_next_unit(&li1162,&item) && cf_raw_eq(item,v1163,1));
+        CHECK(!c0_next_unit(&li1162,&item)); }
       CHECK(!c0_next_record(&ri,&r)); }
     { c0_builder bld; c0_builder_init(&bld);
       c0_build_record(&bld,(const c0_bytes*)0,0);
-      static const unsigned char v1160[] = {0x61};
-      c0_build_field(&bld,v1160,1);
+      static const unsigned char v1164[] = {0x61};
+      c0_build_field(&bld,v1164,1);
       {
-        static const unsigned char v1161[] = {0x78};
-        c0_bytes B1162[] = {{v1161,1}};
-        c0_build_list(&bld,B1162,1); }
-      static const unsigned char v1163[] = {0x1e,0x61,0x1f,0x10,0x1e,0x78,0x18};
+        static const unsigned char v1165[] = {0x78};
+        c0_bytes B1166[] = {{v1165,1}};
+        c0_build_list(&bld,B1166,1); }
+      static const unsigned char v1167[] = {0x1e,0x61,0x1f,0x10,0x1e,0x78,0x18};
       CHECK(c0_builder_status(&bld)==C0_OK);
-      { c0_bytes got=c0_builder_bytes(&bld); CHECK(cf_eq(got,v1163,7));
+      { c0_bytes got=c0_builder_bytes(&bld); CHECK(cf_eq(got,v1167,7));
         CHECK(c0_canonical(got.ptr,got.len)); }
       c0_builder_free(&bld); }
   }
   { /* two-lists */
-    static const unsigned char v1164[] = {0x1e,0x61,0x1f,0x10,0x1e,0x31,0x1f,0x32,0x18,0x1f,0x10,0x1e,0x33,0x18};
-    c0_body body = c0_body_view(v1164,14);
-    CHECK(c0_validate(v1164,14,(c0_error*)0)==C0_OK);
+    static const unsigned char v1168[] = {0x1e,0x61,0x1f,0x10,0x1e,0x31,0x1f,0x32,0x18,0x1f,0x10,0x1e,0x33,0x18};
+    c0_body body = c0_body_view(v1168,14);
+    CHECK(c0_validate(v1168,14,(c0_error*)0)==C0_OK);
     { c0_record_iter ri = c0_body_records(body); c0_record r;
       CHECK(c0_next_record(&ri,&r));
       CHECK(c0_record_count(r)==3);
-      static const unsigned char v1165[] = {0x61};
-      CHECK(cf_val_eq(r,0,v1165,1));
-      { c0_unit_iter li1166; c0_bytes raw, item; CHECK(c0_record_field(r,1,&raw)==C0_OK);
-        CHECK(c0_unit_list(raw,&li1166)==C0_OK);
-        static const unsigned char v1167[] = {0x31};
-        CHECK(c0_next_unit(&li1166,&item) && cf_raw_eq(item,v1167,1));
-        static const unsigned char v1168[] = {0x32};
-        CHECK(c0_next_unit(&li1166,&item) && cf_raw_eq(item,v1168,1));
-        CHECK(!c0_next_unit(&li1166,&item)); }
-      { c0_unit_iter li1169; c0_bytes raw, item; CHECK(c0_record_field(r,2,&raw)==C0_OK);
-        CHECK(c0_unit_list(raw,&li1169)==C0_OK);
-        static const unsigned char v1170[] = {0x33};
-        CHECK(c0_next_unit(&li1169,&item) && cf_raw_eq(item,v1170,1));
-        CHECK(!c0_next_unit(&li1169,&item)); }
+      static const unsigned char v1169[] = {0x61};
+      CHECK(cf_val_eq(r,0,v1169,1));
+      { c0_unit_iter li1170; c0_bytes raw, item; CHECK(c0_record_field(r,1,&raw)==C0_OK);
+        CHECK(c0_unit_list(raw,&li1170)==C0_OK);
+        static const unsigned char v1171[] = {0x31};
+        CHECK(c0_next_unit(&li1170,&item) && cf_raw_eq(item,v1171,1));
+        static const unsigned char v1172[] = {0x32};
+        CHECK(c0_next_unit(&li1170,&item) && cf_raw_eq(item,v1172,1));
+        CHECK(!c0_next_unit(&li1170,&item)); }
+      { c0_unit_iter li1173; c0_bytes raw, item; CHECK(c0_record_field(r,2,&raw)==C0_OK);
+        CHECK(c0_unit_list(raw,&li1173)==C0_OK);
+        static const unsigned char v1174[] = {0x33};
+        CHECK(c0_next_unit(&li1173,&item) && cf_raw_eq(item,v1174,1));
+        CHECK(!c0_next_unit(&li1173,&item)); }
       CHECK(!c0_next_record(&ri,&r)); }
     { c0_builder bld; c0_builder_init(&bld);
       c0_build_record(&bld,(const c0_bytes*)0,0);
-      static const unsigned char v1171[] = {0x61};
-      c0_build_field(&bld,v1171,1);
+      static const unsigned char v1175[] = {0x61};
+      c0_build_field(&bld,v1175,1);
       {
-        static const unsigned char v1172[] = {0x31};
-        static const unsigned char v1173[] = {0x32};
-        c0_bytes B1174[] = {{v1172,1},{v1173,1}};
-        c0_build_list(&bld,B1174,2); }
+        static const unsigned char v1176[] = {0x31};
+        static const unsigned char v1177[] = {0x32};
+        c0_bytes B1178[] = {{v1176,1},{v1177,1}};
+        c0_build_list(&bld,B1178,2); }
       {
-        static const unsigned char v1175[] = {0x33};
-        c0_bytes B1176[] = {{v1175,1}};
-        c0_build_list(&bld,B1176,1); }
-      static const unsigned char v1177[] = {0x1e,0x61,0x1f,0x10,0x1e,0x31,0x1f,0x32,0x18,0x1f,0x10,0x1e,0x33,0x18};
+        static const unsigned char v1179[] = {0x33};
+        c0_bytes B1180[] = {{v1179,1}};
+        c0_build_list(&bld,B1180,1); }
+      static const unsigned char v1181[] = {0x1e,0x61,0x1f,0x10,0x1e,0x31,0x1f,0x32,0x18,0x1f,0x10,0x1e,0x33,0x18};
       CHECK(c0_builder_status(&bld)==C0_OK);
-      { c0_bytes got=c0_builder_bytes(&bld); CHECK(cf_eq(got,v1177,14));
+      { c0_bytes got=c0_builder_bytes(&bld); CHECK(cf_eq(got,v1181,14));
         CHECK(c0_canonical(got.ptr,got.len)); }
       c0_builder_free(&bld); }
   }
   { /* text-item */
-    static const unsigned char v1178[] = {0x1e,0x61,0x1f,0x10,0x1e,0x02,0x78,0x1f,0x79,0x03,0x1f,0x7a,0x18};
-    c0_body body = c0_body_view(v1178,13);
-    CHECK(c0_validate(v1178,13,(c0_error*)0)==C0_OK);
+    static const unsigned char v1182[] = {0x1e,0x61,0x1f,0x10,0x1e,0x02,0x78,0x1f,0x79,0x03,0x1f,0x7a,0x18};
+    c0_body body = c0_body_view(v1182,13);
+    CHECK(c0_validate(v1182,13,(c0_error*)0)==C0_OK);
     { c0_record_iter ri = c0_body_records(body); c0_record r;
       CHECK(c0_next_record(&ri,&r));
       CHECK(c0_record_count(r)==2);
-      static const unsigned char v1179[] = {0x61};
-      CHECK(cf_val_eq(r,0,v1179,1));
-      { c0_unit_iter li1180; c0_bytes raw, item; CHECK(c0_record_field(r,1,&raw)==C0_OK);
-        CHECK(c0_unit_list(raw,&li1180)==C0_OK);
-        static const unsigned char v1181[] = {0x78,0x1f,0x79};
-        CHECK(c0_next_unit(&li1180,&item) && cf_raw_eq(item,v1181,3));
-        static const unsigned char v1182[] = {0x7a};
-        CHECK(c0_next_unit(&li1180,&item) && cf_raw_eq(item,v1182,1));
-        CHECK(!c0_next_unit(&li1180,&item)); }
+      static const unsigned char v1183[] = {0x61};
+      CHECK(cf_val_eq(r,0,v1183,1));
+      { c0_unit_iter li1184; c0_bytes raw, item; CHECK(c0_record_field(r,1,&raw)==C0_OK);
+        CHECK(c0_unit_list(raw,&li1184)==C0_OK);
+        static const unsigned char v1185[] = {0x78,0x1f,0x79};
+        CHECK(c0_next_unit(&li1184,&item) && cf_raw_eq(item,v1185,3));
+        static const unsigned char v1186[] = {0x7a};
+        CHECK(c0_next_unit(&li1184,&item) && cf_raw_eq(item,v1186,1));
+        CHECK(!c0_next_unit(&li1184,&item)); }
       CHECK(!c0_next_record(&ri,&r)); }
     { c0_builder bld; c0_builder_init(&bld);
       c0_build_record(&bld,(const c0_bytes*)0,0);
-      static const unsigned char v1183[] = {0x61};
-      c0_build_field(&bld,v1183,1);
+      static const unsigned char v1187[] = {0x61};
+      c0_build_field(&bld,v1187,1);
       {
-        static const unsigned char v1184[] = {0x78,0x1f,0x79};
-        static const unsigned char v1185[] = {0x7a};
-        c0_bytes B1186[] = {{v1184,3},{v1185,1}};
-        c0_build_list(&bld,B1186,2); }
-      static const unsigned char v1187[] = {0x1e,0x61,0x1f,0x10,0x1e,0x02,0x78,0x1f,0x79,0x03,0x1f,0x7a,0x18};
+        static const unsigned char v1188[] = {0x78,0x1f,0x79};
+        static const unsigned char v1189[] = {0x7a};
+        c0_bytes B1190[] = {{v1188,3},{v1189,1}};
+        c0_build_list(&bld,B1190,2); }
+      static const unsigned char v1191[] = {0x1e,0x61,0x1f,0x10,0x1e,0x02,0x78,0x1f,0x79,0x03,0x1f,0x7a,0x18};
       CHECK(c0_builder_status(&bld)==C0_OK);
-      { c0_bytes got=c0_builder_bytes(&bld); CHECK(cf_eq(got,v1187,13));
+      { c0_bytes got=c0_builder_bytes(&bld); CHECK(cf_eq(got,v1191,13));
         CHECK(c0_canonical(got.ptr,got.len)); }
       c0_builder_free(&bld); }
   }
   { /* binary-item */
-    static const unsigned char v1188[] = {0x1e,0x61,0x1f,0x10,0x1e,0x02,0x00,0xff,0x03,0x18};
-    c0_body body = c0_body_view(v1188,10);
-    CHECK(c0_validate(v1188,10,(c0_error*)0)==C0_OK);
+    static const unsigned char v1192[] = {0x1e,0x61,0x1f,0x10,0x1e,0x02,0x00,0xff,0x03,0x18};
+    c0_body body = c0_body_view(v1192,10);
+    CHECK(c0_validate(v1192,10,(c0_error*)0)==C0_OK);
     { c0_record_iter ri = c0_body_records(body); c0_record r;
       CHECK(c0_next_record(&ri,&r));
       CHECK(c0_record_count(r)==2);
-      static const unsigned char v1189[] = {0x61};
-      CHECK(cf_val_eq(r,0,v1189,1));
-      { c0_unit_iter li1190; c0_bytes raw, item; CHECK(c0_record_field(r,1,&raw)==C0_OK);
-        CHECK(c0_unit_list(raw,&li1190)==C0_OK);
-        static const unsigned char v1191[] = {0x00,0xff};
-        CHECK(c0_next_unit(&li1190,&item) && cf_raw_eq(item,v1191,2));
-        CHECK(!c0_next_unit(&li1190,&item)); }
+      static const unsigned char v1193[] = {0x61};
+      CHECK(cf_val_eq(r,0,v1193,1));
+      { c0_unit_iter li1194; c0_bytes raw, item; CHECK(c0_record_field(r,1,&raw)==C0_OK);
+        CHECK(c0_unit_list(raw,&li1194)==C0_OK);
+        static const unsigned char v1195[] = {0x00,0xff};
+        CHECK(c0_next_unit(&li1194,&item) && cf_raw_eq(item,v1195,2));
+        CHECK(!c0_next_unit(&li1194,&item)); }
       CHECK(!c0_next_record(&ri,&r)); }
     { c0_builder bld; c0_builder_init(&bld);
       c0_build_record(&bld,(const c0_bytes*)0,0);
-      static const unsigned char v1192[] = {0x61};
-      c0_build_field(&bld,v1192,1);
+      static const unsigned char v1196[] = {0x61};
+      c0_build_field(&bld,v1196,1);
       {
-        static const unsigned char v1193[] = {0x00,0xff};
-        c0_bytes B1194[] = {{v1193,2}};
-        c0_build_list(&bld,B1194,1); }
-      static const unsigned char v1195[] = {0x1e,0x61,0x1f,0x10,0x1e,0x02,0x00,0xff,0x03,0x18};
+        static const unsigned char v1197[] = {0x00,0xff};
+        c0_bytes B1198[] = {{v1197,2}};
+        c0_build_list(&bld,B1198,1); }
+      static const unsigned char v1199[] = {0x1e,0x61,0x1f,0x10,0x1e,0x02,0x00,0xff,0x03,0x18};
       CHECK(c0_builder_status(&bld)==C0_OK);
-      { c0_bytes got=c0_builder_bytes(&bld); CHECK(cf_eq(got,v1195,10));
+      { c0_bytes got=c0_builder_bytes(&bld); CHECK(cf_eq(got,v1199,10));
         CHECK(c0_canonical(got.ptr,got.len)); }
       c0_builder_free(&bld); }
   }
   { /* list-in-list */
-    static const unsigned char v1196[] = {0x1e,0x61,0x1f,0x10,0x1e,0x10,0x1e,0x78,0x1f,0x79,0x18,0x1f,0x7a,0x18};
-    c0_body body = c0_body_view(v1196,14);
-    CHECK(c0_validate(v1196,14,(c0_error*)0)==C0_OK);
+    static const unsigned char v1200[] = {0x1e,0x61,0x1f,0x10,0x1e,0x10,0x1e,0x78,0x1f,0x79,0x18,0x1f,0x7a,0x18};
+    c0_body body = c0_body_view(v1200,14);
+    CHECK(c0_validate(v1200,14,(c0_error*)0)==C0_OK);
     { c0_record_iter ri = c0_body_records(body); c0_record r;
       CHECK(c0_next_record(&ri,&r));
       CHECK(c0_record_count(r)==2);
-      static const unsigned char v1197[] = {0x61};
-      CHECK(cf_val_eq(r,0,v1197,1));
+      static const unsigned char v1201[] = {0x61};
+      CHECK(cf_val_eq(r,0,v1201,1));
       { c0_body lv; c0_record_iter ri2; c0_record r2; CHECK(cf_level(r,1,&lv));
         ri2 = c0_body_records(lv); CHECK(c0_next_record(&ri2,&r2));
         CHECK(c0_record_count(r2)==2);
-        { c0_unit_iter li1198; c0_bytes raw, item; CHECK(c0_record_field(r2,0,&raw)==C0_OK);
-          CHECK(c0_unit_list(raw,&li1198)==C0_OK);
-          static const unsigned char v1199[] = {0x78};
-          CHECK(c0_next_unit(&li1198,&item) && cf_raw_eq(item,v1199,1));
-          static const unsigned char v1200[] = {0x79};
-          CHECK(c0_next_unit(&li1198,&item) && cf_raw_eq(item,v1200,1));
-          CHECK(!c0_next_unit(&li1198,&item)); }
-        static const unsigned char v1201[] = {0x7a};
-        CHECK(cf_val_eq(r2,1,v1201,1));
+        { c0_unit_iter li1202; c0_bytes raw, item; CHECK(c0_record_field(r2,0,&raw)==C0_OK);
+          CHECK(c0_unit_list(raw,&li1202)==C0_OK);
+          static const unsigned char v1203[] = {0x78};
+          CHECK(c0_next_unit(&li1202,&item) && cf_raw_eq(item,v1203,1));
+          static const unsigned char v1204[] = {0x79};
+          CHECK(c0_next_unit(&li1202,&item) && cf_raw_eq(item,v1204,1));
+          CHECK(!c0_next_unit(&li1202,&item)); }
+        static const unsigned char v1205[] = {0x7a};
+        CHECK(cf_val_eq(r2,1,v1205,1));
         CHECK(!c0_next_record(&ri2,&r2)); }
       CHECK(!c0_next_record(&ri,&r)); }
     { c0_builder bld; c0_builder_init(&bld);
       c0_build_record(&bld,(const c0_bytes*)0,0);
-      static const unsigned char v1202[] = {0x61};
-      c0_build_field(&bld,v1202,1);
+      static const unsigned char v1206[] = {0x61};
+      c0_build_field(&bld,v1206,1);
       c0_build_level_open(&bld);
       c0_build_record(&bld,(const c0_bytes*)0,0);
       {
-        static const unsigned char v1203[] = {0x78};
-        static const unsigned char v1204[] = {0x79};
-        c0_bytes B1205[] = {{v1203,1},{v1204,1}};
-        c0_build_list(&bld,B1205,2); }
-      static const unsigned char v1206[] = {0x7a};
-      c0_build_field(&bld,v1206,1);
+        static const unsigned char v1207[] = {0x78};
+        static const unsigned char v1208[] = {0x79};
+        c0_bytes B1209[] = {{v1207,1},{v1208,1}};
+        c0_build_list(&bld,B1209,2); }
+      static const unsigned char v1210[] = {0x7a};
+      c0_build_field(&bld,v1210,1);
       c0_build_level_close(&bld);
-      static const unsigned char v1207[] = {0x1e,0x61,0x1f,0x10,0x1e,0x10,0x1e,0x78,0x1f,0x79,0x18,0x1f,0x7a,0x18};
+      static const unsigned char v1211[] = {0x1e,0x61,0x1f,0x10,0x1e,0x10,0x1e,0x78,0x1f,0x79,0x18,0x1f,0x7a,0x18};
       CHECK(c0_builder_status(&bld)==C0_OK);
-      { c0_bytes got=c0_builder_bytes(&bld); CHECK(cf_eq(got,v1207,14));
+      { c0_bytes got=c0_builder_bytes(&bld); CHECK(cf_eq(got,v1211,14));
         CHECK(c0_canonical(got.ptr,got.len)); }
       c0_builder_free(&bld); }
   }
   { /* map-item */
-    static const unsigned char v1208[] = {0x1e,0x61,0x1f,0x10,0x1e,0x01,0x6b,0x1f,0x76,0x18};
-    c0_body body = c0_body_view(v1208,10);
-    CHECK(c0_validate(v1208,10,(c0_error*)0)==C0_OK);
+    static const unsigned char v1212[] = {0x1e,0x61,0x1f,0x10,0x1e,0x01,0x6b,0x1f,0x76,0x18};
+    c0_body body = c0_body_view(v1212,10);
+    CHECK(c0_validate(v1212,10,(c0_error*)0)==C0_OK);
     { c0_record_iter ri = c0_body_records(body); c0_record r;
       CHECK(c0_next_record(&ri,&r));
       CHECK(c0_record_count(r)==2);
-      static const unsigned char v1209[] = {0x61};
-      CHECK(cf_val_eq(r,0,v1209,1));
-      { c0_body lv1210; CHECK(cf_level(r,1,&lv1210));
+      static const unsigned char v1213[] = {0x61};
+      CHECK(cf_val_eq(r,0,v1213,1));
+      { c0_body lv1214; CHECK(cf_level(r,1,&lv1214));
         { c0_unit_iter li; c0_bytes raw; CHECK(c0_record_field(r,1,&raw)==C0_OK);
           CHECK(c0_unit_list(raw,&li)==C0_ERR_NOT_LIST); }
-        { c0_file_iter fi1211 = c0_body_files(lv1210); c0_file f1212;
-          CHECK(c0_next_file(&fi1211,&f1212)); CHECK(c0_file_name(f1212).len==0);
-          { c0_group_iter gi1213 = c0_file_groups(f1212); c0_group g1214;
-            CHECK(c0_next_group(&gi1213,&g1214));
-            static const unsigned char v1215[1] = {0};
-            CHECK(cf_eq(c0_group_name(g1214),v1215,0));
-            { c0_record h1216;
-              CHECK(!c0_group_header(g1214,&h1216));
+        { c0_file_iter fi1215 = c0_body_files(lv1214); c0_file f1216;
+          CHECK(c0_next_file(&fi1215,&f1216)); CHECK(c0_file_name(f1216).len==0);
+          { c0_group_iter gi1217 = c0_file_groups(f1216); c0_group g1218;
+            CHECK(c0_next_group(&gi1217,&g1218));
+            static const unsigned char v1219[1] = {0};
+            CHECK(cf_eq(c0_group_name(g1218),v1219,0));
+            { c0_record h1220;
+              CHECK(!c0_group_header(g1218,&h1220));
             }
-            { c0_record_iter ri1217 = c0_group_records(g1214); c0_record r1218;
-              CHECK(c0_next_record(&ri1217,&r1218));
-              CHECK(c0_record_keyed(r1218));
-              { c0_pair_iter pi1219 = c0_record_pairs(r1218); c0_bytes k, v;
-                static const unsigned char v1220[] = {0x6b};
-                static const unsigned char v1221[] = {0x76};
-                CHECK(c0_next_pair(&pi1219,&k,&v) && cf_eq(k,v1220,1) && cf_raw_eq(v,v1221,1));
-                CHECK(!c0_next_pair(&pi1219,&k,&v)); }
-              CHECK(!c0_next_record(&ri1217,&r1218)); CHECK(ri1217.err.code==C0_OK); }
-            CHECK(!c0_next_group(&gi1213,&g1214)); CHECK(gi1213.err.code==C0_OK); }
-          CHECK(!c0_next_file(&fi1211,&f1212)); }
+            { c0_record_iter ri1221 = c0_group_records(g1218); c0_record r1222;
+              CHECK(c0_next_record(&ri1221,&r1222));
+              CHECK(c0_record_keyed(r1222));
+              { c0_pair_iter pi1223 = c0_record_pairs(r1222); c0_bytes k, v;
+                static const unsigned char v1224[] = {0x6b};
+                static const unsigned char v1225[] = {0x76};
+                CHECK(c0_next_pair(&pi1223,&k,&v) && cf_eq(k,v1224,1) && cf_raw_eq(v,v1225,1));
+                CHECK(!c0_next_pair(&pi1223,&k,&v)); }
+              CHECK(!c0_next_record(&ri1221,&r1222)); CHECK(ri1221.err.code==C0_OK); }
+            CHECK(!c0_next_group(&gi1217,&g1218)); CHECK(gi1217.err.code==C0_OK); }
+          CHECK(!c0_next_file(&fi1215,&f1216)); }
       }
       CHECK(!c0_next_record(&ri,&r)); }
     { c0_builder bld; c0_builder_init(&bld);
       c0_build_record(&bld,(const c0_bytes*)0,0);
-      static const unsigned char v1222[] = {0x61};
-      c0_build_field(&bld,v1222,1);
+      static const unsigned char v1226[] = {0x61};
+      c0_build_field(&bld,v1226,1);
       c0_build_level_open(&bld);
       c0_build_record(&bld,(const c0_bytes*)0,0);
-      static const unsigned char v1223[] = {0x6b};
-      static const unsigned char v1224[] = {0x76};
-      c0_build_key(&bld,v1223,1,v1224,1);
+      static const unsigned char v1227[] = {0x6b};
+      static const unsigned char v1228[] = {0x76};
+      c0_build_key(&bld,v1227,1,v1228,1);
       c0_build_level_close(&bld);
-      static const unsigned char v1225[] = {0x1e,0x61,0x1f,0x10,0x1e,0x01,0x6b,0x1f,0x76,0x18};
+      static const unsigned char v1229[] = {0x1e,0x61,0x1f,0x10,0x1e,0x01,0x6b,0x1f,0x76,0x18};
       CHECK(c0_builder_status(&bld)==C0_OK);
-      { c0_bytes got=c0_builder_bytes(&bld); CHECK(cf_eq(got,v1225,10));
+      { c0_bytes got=c0_builder_bytes(&bld); CHECK(cf_eq(got,v1229,10));
         CHECK(c0_canonical(got.ptr,got.len)); }
       c0_builder_free(&bld); }
   }
   { /* table-not-a-list */
-    static const unsigned char v1226[] = {0x1e,0x61,0x1f,0x10,0x1e,0x31,0x1f,0x32,0x1e,0x33,0x1f,0x34,0x18};
-    c0_body body = c0_body_view(v1226,13);
-    CHECK(c0_validate(v1226,13,(c0_error*)0)==C0_OK);
+    static const unsigned char v1230[] = {0x1e,0x61,0x1f,0x10,0x1e,0x31,0x1f,0x32,0x1e,0x33,0x1f,0x34,0x18};
+    c0_body body = c0_body_view(v1230,13);
+    CHECK(c0_validate(v1230,13,(c0_error*)0)==C0_OK);
     { c0_record_iter ri = c0_body_records(body); c0_record r;
       CHECK(c0_next_record(&ri,&r));
       CHECK(c0_record_count(r)==2);
-      static const unsigned char v1227[] = {0x61};
-      CHECK(cf_val_eq(r,0,v1227,1));
-      { c0_body lv1228; CHECK(cf_level(r,1,&lv1228));
+      static const unsigned char v1231[] = {0x61};
+      CHECK(cf_val_eq(r,0,v1231,1));
+      { c0_body lv1232; CHECK(cf_level(r,1,&lv1232));
         { c0_unit_iter li; c0_bytes raw; CHECK(c0_record_field(r,1,&raw)==C0_OK);
           CHECK(c0_unit_list(raw,&li)==C0_ERR_NOT_LIST); }
-        { c0_file_iter fi1229 = c0_body_files(lv1228); c0_file f1230;
-          CHECK(c0_next_file(&fi1229,&f1230)); CHECK(c0_file_name(f1230).len==0);
-          { c0_group_iter gi1231 = c0_file_groups(f1230); c0_group g1232;
-            CHECK(c0_next_group(&gi1231,&g1232));
-            static const unsigned char v1233[1] = {0};
-            CHECK(cf_eq(c0_group_name(g1232),v1233,0));
-            { c0_record h1234;
-              CHECK(!c0_group_header(g1232,&h1234));
+        { c0_file_iter fi1233 = c0_body_files(lv1232); c0_file f1234;
+          CHECK(c0_next_file(&fi1233,&f1234)); CHECK(c0_file_name(f1234).len==0);
+          { c0_group_iter gi1235 = c0_file_groups(f1234); c0_group g1236;
+            CHECK(c0_next_group(&gi1235,&g1236));
+            static const unsigned char v1237[1] = {0};
+            CHECK(cf_eq(c0_group_name(g1236),v1237,0));
+            { c0_record h1238;
+              CHECK(!c0_group_header(g1236,&h1238));
             }
-            { c0_record_iter ri1235 = c0_group_records(g1232); c0_record r1236;
-              CHECK(c0_next_record(&ri1235,&r1236));
-              CHECK(!c0_record_keyed(r1236));
-              CHECK(c0_record_count(r1236)==2);
-              static const unsigned char v1237[] = {0x31};
-              CHECK(cf_val_eq(r1236,0,v1237,1));
-              static const unsigned char v1238[] = {0x32};
-              CHECK(cf_val_eq(r1236,1,v1238,1));
-              CHECK(c0_next_record(&ri1235,&r1236));
-              CHECK(!c0_record_keyed(r1236));
-              CHECK(c0_record_count(r1236)==2);
-              static const unsigned char v1239[] = {0x33};
-              CHECK(cf_val_eq(r1236,0,v1239,1));
-              static const unsigned char v1240[] = {0x34};
-              CHECK(cf_val_eq(r1236,1,v1240,1));
-              CHECK(!c0_next_record(&ri1235,&r1236)); CHECK(ri1235.err.code==C0_OK); }
-            CHECK(!c0_next_group(&gi1231,&g1232)); CHECK(gi1231.err.code==C0_OK); }
-          CHECK(!c0_next_file(&fi1229,&f1230)); }
+            { c0_record_iter ri1239 = c0_group_records(g1236); c0_record r1240;
+              CHECK(c0_next_record(&ri1239,&r1240));
+              CHECK(!c0_record_keyed(r1240));
+              CHECK(c0_record_count(r1240)==2);
+              static const unsigned char v1241[] = {0x31};
+              CHECK(cf_val_eq(r1240,0,v1241,1));
+              static const unsigned char v1242[] = {0x32};
+              CHECK(cf_val_eq(r1240,1,v1242,1));
+              CHECK(c0_next_record(&ri1239,&r1240));
+              CHECK(!c0_record_keyed(r1240));
+              CHECK(c0_record_count(r1240)==2);
+              static const unsigned char v1243[] = {0x33};
+              CHECK(cf_val_eq(r1240,0,v1243,1));
+              static const unsigned char v1244[] = {0x34};
+              CHECK(cf_val_eq(r1240,1,v1244,1));
+              CHECK(!c0_next_record(&ri1239,&r1240)); CHECK(ri1239.err.code==C0_OK); }
+            CHECK(!c0_next_group(&gi1235,&g1236)); CHECK(gi1235.err.code==C0_OK); }
+          CHECK(!c0_next_file(&fi1233,&f1234)); }
       }
       CHECK(!c0_next_record(&ri,&r)); }
     { c0_builder bld; c0_builder_init(&bld);
       c0_build_record(&bld,(const c0_bytes*)0,0);
-      static const unsigned char v1241[] = {0x61};
-      c0_build_field(&bld,v1241,1);
+      static const unsigned char v1245[] = {0x61};
+      c0_build_field(&bld,v1245,1);
       c0_build_level_open(&bld);
       c0_build_record(&bld,(const c0_bytes*)0,0);
-      static const unsigned char v1242[] = {0x31};
-      c0_build_field(&bld,v1242,1);
-      static const unsigned char v1243[] = {0x32};
-      c0_build_field(&bld,v1243,1);
+      static const unsigned char v1246[] = {0x31};
+      c0_build_field(&bld,v1246,1);
+      static const unsigned char v1247[] = {0x32};
+      c0_build_field(&bld,v1247,1);
       c0_build_record(&bld,(const c0_bytes*)0,0);
-      static const unsigned char v1244[] = {0x33};
-      c0_build_field(&bld,v1244,1);
-      static const unsigned char v1245[] = {0x34};
-      c0_build_field(&bld,v1245,1);
+      static const unsigned char v1248[] = {0x33};
+      c0_build_field(&bld,v1248,1);
+      static const unsigned char v1249[] = {0x34};
+      c0_build_field(&bld,v1249,1);
       c0_build_level_close(&bld);
-      static const unsigned char v1246[] = {0x1e,0x61,0x1f,0x10,0x1e,0x31,0x1f,0x32,0x1e,0x33,0x1f,0x34,0x18};
+      static const unsigned char v1250[] = {0x1e,0x61,0x1f,0x10,0x1e,0x31,0x1f,0x32,0x1e,0x33,0x1f,0x34,0x18};
       CHECK(c0_builder_status(&bld)==C0_OK);
-      { c0_bytes got=c0_builder_bytes(&bld); CHECK(cf_eq(got,v1246,13));
+      { c0_bytes got=c0_builder_bytes(&bld); CHECK(cf_eq(got,v1250,13));
         CHECK(c0_canonical(got.ptr,got.len)); }
       c0_builder_free(&bld); }
   }
   { /* header-row-in-level */
-    static const unsigned char v1247[] = {0x1e,0x61,0x1f,0x10,0x01,0x1e,0x78,0x1f,0x79,0x1e,0x31,0x1f,0x32,0x18};
-    c0_body body = c0_body_view(v1247,14);
-    CHECK(c0_validate(v1247,14,(c0_error*)0)==C0_OK);
+    static const unsigned char v1251[] = {0x1e,0x61,0x1f,0x10,0x01,0x1e,0x78,0x1f,0x79,0x1e,0x31,0x1f,0x32,0x18};
+    c0_body body = c0_body_view(v1251,14);
+    CHECK(c0_validate(v1251,14,(c0_error*)0)==C0_OK);
     { c0_record_iter ri = c0_body_records(body); c0_record r;
       CHECK(c0_next_record(&ri,&r));
       CHECK(c0_record_count(r)==2);
-      static const unsigned char v1248[] = {0x61};
-      CHECK(cf_val_eq(r,0,v1248,1));
-      { c0_body lv1249; CHECK(cf_level(r,1,&lv1249));
+      static const unsigned char v1252[] = {0x61};
+      CHECK(cf_val_eq(r,0,v1252,1));
+      { c0_body lv1253; CHECK(cf_level(r,1,&lv1253));
         { c0_unit_iter li; c0_bytes raw; CHECK(c0_record_field(r,1,&raw)==C0_OK);
           CHECK(c0_unit_list(raw,&li)==C0_ERR_NOT_LIST); }
-        { c0_file_iter fi1250 = c0_body_files(lv1249); c0_file f1251;
-          CHECK(c0_next_file(&fi1250,&f1251)); CHECK(c0_file_name(f1251).len==0);
-          { c0_group_iter gi1252 = c0_file_groups(f1251); c0_group g1253;
-            CHECK(c0_next_group(&gi1252,&g1253));
-            static const unsigned char v1254[1] = {0};
-            CHECK(cf_eq(c0_group_name(g1253),v1254,0));
-            { c0_record h1255;
-              CHECK(c0_group_header(g1253,&h1255));
-              CHECK(c0_record_count(h1255)==2);
-              static const unsigned char v1256[] = {0x78};
-              CHECK(cf_val_eq(h1255,0,v1256,1));
-              static const unsigned char v1257[] = {0x79};
-              CHECK(cf_val_eq(h1255,1,v1257,1));
+        { c0_file_iter fi1254 = c0_body_files(lv1253); c0_file f1255;
+          CHECK(c0_next_file(&fi1254,&f1255)); CHECK(c0_file_name(f1255).len==0);
+          { c0_group_iter gi1256 = c0_file_groups(f1255); c0_group g1257;
+            CHECK(c0_next_group(&gi1256,&g1257));
+            static const unsigned char v1258[1] = {0};
+            CHECK(cf_eq(c0_group_name(g1257),v1258,0));
+            { c0_record h1259;
+              CHECK(c0_group_header(g1257,&h1259));
+              CHECK(c0_record_count(h1259)==2);
+              static const unsigned char v1260[] = {0x78};
+              CHECK(cf_val_eq(h1259,0,v1260,1));
+              static const unsigned char v1261[] = {0x79};
+              CHECK(cf_val_eq(h1259,1,v1261,1));
             }
-            { c0_record_iter ri1258 = c0_group_records(g1253); c0_record r1259;
-              CHECK(c0_next_record(&ri1258,&r1259));
-              CHECK(!c0_record_keyed(r1259));
-              CHECK(c0_record_count(r1259)==2);
-              static const unsigned char v1260[] = {0x31};
-              CHECK(cf_val_eq(r1259,0,v1260,1));
-              static const unsigned char v1261[] = {0x32};
-              CHECK(cf_val_eq(r1259,1,v1261,1));
-              CHECK(!c0_next_record(&ri1258,&r1259)); CHECK(ri1258.err.code==C0_OK); }
-            CHECK(!c0_next_group(&gi1252,&g1253)); CHECK(gi1252.err.code==C0_OK); }
-          CHECK(!c0_next_file(&fi1250,&f1251)); }
+            { c0_record_iter ri1262 = c0_group_records(g1257); c0_record r1263;
+              CHECK(c0_next_record(&ri1262,&r1263));
+              CHECK(!c0_record_keyed(r1263));
+              CHECK(c0_record_count(r1263)==2);
+              static const unsigned char v1264[] = {0x31};
+              CHECK(cf_val_eq(r1263,0,v1264,1));
+              static const unsigned char v1265[] = {0x32};
+              CHECK(cf_val_eq(r1263,1,v1265,1));
+              CHECK(!c0_next_record(&ri1262,&r1263)); CHECK(ri1262.err.code==C0_OK); }
+            CHECK(!c0_next_group(&gi1256,&g1257)); CHECK(gi1256.err.code==C0_OK); }
+          CHECK(!c0_next_file(&fi1254,&f1255)); }
       }
       CHECK(!c0_next_record(&ri,&r)); }
     { c0_builder bld; c0_builder_init(&bld);
       c0_build_record(&bld,(const c0_bytes*)0,0);
-      static const unsigned char v1262[] = {0x61};
-      c0_build_field(&bld,v1262,1);
+      static const unsigned char v1266[] = {0x61};
+      c0_build_field(&bld,v1266,1);
       c0_build_level_open(&bld);
       {
-        static const unsigned char v1263[] = {0x78};
-        static const unsigned char v1264[] = {0x79};
-        c0_bytes B1265[] = {{v1263,1},{v1264,1}};
-        c0_build_header(&bld,B1265,2); }
+        static const unsigned char v1267[] = {0x78};
+        static const unsigned char v1268[] = {0x79};
+        c0_bytes B1269[] = {{v1267,1},{v1268,1}};
+        c0_build_header(&bld,B1269,2); }
       c0_build_record(&bld,(const c0_bytes*)0,0);
-      static const unsigned char v1266[] = {0x31};
-      c0_build_field(&bld,v1266,1);
-      static const unsigned char v1267[] = {0x32};
-      c0_build_field(&bld,v1267,1);
+      static const unsigned char v1270[] = {0x31};
+      c0_build_field(&bld,v1270,1);
+      static const unsigned char v1271[] = {0x32};
+      c0_build_field(&bld,v1271,1);
       c0_build_level_close(&bld);
-      static const unsigned char v1268[] = {0x1e,0x61,0x1f,0x10,0x01,0x1e,0x78,0x1f,0x79,0x1e,0x31,0x1f,0x32,0x18};
+      static const unsigned char v1272[] = {0x1e,0x61,0x1f,0x10,0x01,0x1e,0x78,0x1f,0x79,0x1e,0x31,0x1f,0x32,0x18};
       CHECK(c0_builder_status(&bld)==C0_OK);
-      { c0_bytes got=c0_builder_bytes(&bld); CHECK(cf_eq(got,v1268,14));
+      { c0_bytes got=c0_builder_bytes(&bld); CHECK(cf_eq(got,v1272,14));
         CHECK(c0_canonical(got.ptr,got.len)); }
       c0_builder_free(&bld); }
   }
   { /* empty-level */
-    static const unsigned char v1269[] = {0x1e,0x61,0x1f,0x10,0x18};
-    c0_body body = c0_body_view(v1269,5);
-    CHECK(c0_validate(v1269,5,(c0_error*)0)==C0_OK);
+    static const unsigned char v1273[] = {0x1e,0x61,0x1f,0x10,0x18};
+    c0_body body = c0_body_view(v1273,5);
+    CHECK(c0_validate(v1273,5,(c0_error*)0)==C0_OK);
     { c0_record_iter ri = c0_body_records(body); c0_record r;
       CHECK(c0_next_record(&ri,&r));
       CHECK(c0_record_count(r)==2);
-      static const unsigned char v1270[] = {0x61};
-      CHECK(cf_val_eq(r,0,v1270,1));
-      { c0_unit_iter li1271; c0_bytes raw, item; CHECK(c0_record_field(r,1,&raw)==C0_OK);
-        CHECK(c0_unit_list(raw,&li1271)==C0_OK);
-        CHECK(!c0_next_unit(&li1271,&item)); }
+      static const unsigned char v1274[] = {0x61};
+      CHECK(cf_val_eq(r,0,v1274,1));
+      { c0_unit_iter li1275; c0_bytes raw, item; CHECK(c0_record_field(r,1,&raw)==C0_OK);
+        CHECK(c0_unit_list(raw,&li1275)==C0_OK);
+        CHECK(!c0_next_unit(&li1275,&item)); }
       CHECK(!c0_next_record(&ri,&r)); }
     { c0_builder bld; c0_builder_init(&bld);
       c0_build_record(&bld,(const c0_bytes*)0,0);
-      static const unsigned char v1272[] = {0x61};
-      c0_build_field(&bld,v1272,1);
+      static const unsigned char v1276[] = {0x61};
+      c0_build_field(&bld,v1276,1);
       {
-        c0_bytes B1273[1] = {{0,0}};
-        c0_build_list(&bld,B1273,0); }
-      static const unsigned char v1274[] = {0x1e,0x61,0x1f,0x10,0x18};
+        c0_bytes B1277[1] = {{0,0}};
+        c0_build_list(&bld,B1277,0); }
+      static const unsigned char v1278[] = {0x1e,0x61,0x1f,0x10,0x18};
       CHECK(c0_builder_status(&bld)==C0_OK);
-      { c0_bytes got=c0_builder_bytes(&bld); CHECK(cf_eq(got,v1274,5));
+      { c0_bytes got=c0_builder_bytes(&bld); CHECK(cf_eq(got,v1278,5));
         CHECK(c0_canonical(got.ptr,got.len)); }
       c0_builder_free(&bld); }
   }
@@ -3597,398 +3619,398 @@ static void cf_nested(void) {
 
 static void cf_diff(void) {
   { /* simple */
-    static const unsigned char v1275[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x67,0x72,0x65,0x65,0x74,0x69,0x6e,0x67,0x2e,0x74,0x78,0x74,0x1d,0x02,0x48,0x65,0x6c,0x6c,0x6f,0x20,0x03,0x1f,0x77,0x6f,0x72,0x6c,0x64,0x1a,0x75,0x6e,0x69,0x76,0x65,0x72,0x73,0x65,0x1f,0x21,0x04};
-    static const unsigned char v1276[] = {0x67,0x72,0x65,0x65,0x74,0x69,0x6e,0x67,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1277[] = {0x48,0x65,0x6c,0x6c,0x6f,0x20,0x77,0x6f,0x72,0x6c,0x64,0x21};
-    c0_diff_file_input F[] = {{{v1276,12},{v1277,12}}};
+    static const unsigned char v1279[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x67,0x72,0x65,0x65,0x74,0x69,0x6e,0x67,0x2e,0x74,0x78,0x74,0x1d,0x02,0x48,0x65,0x6c,0x6c,0x6f,0x20,0x03,0x1f,0x77,0x6f,0x72,0x6c,0x64,0x1a,0x75,0x6e,0x69,0x76,0x65,0x72,0x73,0x65,0x1f,0x21,0x04};
+    static const unsigned char v1280[] = {0x67,0x72,0x65,0x65,0x74,0x69,0x6e,0x67,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1281[] = {0x48,0x65,0x6c,0x6c,0x6f,0x20,0x77,0x6f,0x72,0x6c,0x64,0x21};
+    c0_diff_file_input F[] = {{{v1280,12},{v1281,12}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1275,52,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1279,52,F,1,&out,&n,&err);
     CHECK(rc==1 && n==1);
     if (rc) {
-      static const unsigned char v1278[] = {0x67,0x72,0x65,0x65,0x74,0x69,0x6e,0x67,0x2e,0x74,0x78,0x74};
-      static const unsigned char v1279[] = {0x48,0x65,0x6c,0x6c,0x6f,0x20,0x75,0x6e,0x69,0x76,0x65,0x72,0x73,0x65,0x21};
-      CHECK(cf_out_eq(out,n,v1278,12,v1279,15));
+      static const unsigned char v1282[] = {0x67,0x72,0x65,0x65,0x74,0x69,0x6e,0x67,0x2e,0x74,0x78,0x74};
+      static const unsigned char v1283[] = {0x48,0x65,0x6c,0x6c,0x6f,0x20,0x75,0x6e,0x69,0x76,0x65,0x72,0x73,0x65,0x21};
+      CHECK(cf_out_eq(out,n,v1282,12,v1283,15));
       c0_diff_free_outputs(out,n); }
   }
   { /* anchor-before-only */
-    static const unsigned char v1280[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x70,0x70,0x2e,0x72,0x62,0x1d,0x02,0x63,0x6c,0x61,0x73,0x73,0x20,0x41,0x70,0x70,0x0a,0x20,0x20,0x64,0x65,0x66,0x20,0x03,0x1f,0x72,0x75,0x6e,0x1a,0x73,0x74,0x61,0x72,0x74,0x04};
-    static const unsigned char v1281[] = {0x61,0x70,0x70,0x2e,0x72,0x62};
-    static const unsigned char v1282[] = {0x63,0x6c,0x61,0x73,0x73,0x20,0x41,0x70,0x70,0x0a,0x20,0x20,0x64,0x65,0x66,0x20,0x72,0x75,0x6e,0x0a,0x20,0x20,0x65,0x6e,0x64,0x0a,0x65,0x6e,0x64,0x0a};
-    c0_diff_file_input F[] = {{{v1281,6},{v1282,30}}};
+    static const unsigned char v1284[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x70,0x70,0x2e,0x72,0x62,0x1d,0x02,0x63,0x6c,0x61,0x73,0x73,0x20,0x41,0x70,0x70,0x0a,0x20,0x20,0x64,0x65,0x66,0x20,0x03,0x1f,0x72,0x75,0x6e,0x1a,0x73,0x74,0x61,0x72,0x74,0x04};
+    static const unsigned char v1285[] = {0x61,0x70,0x70,0x2e,0x72,0x62};
+    static const unsigned char v1286[] = {0x63,0x6c,0x61,0x73,0x73,0x20,0x41,0x70,0x70,0x0a,0x20,0x20,0x64,0x65,0x66,0x20,0x72,0x75,0x6e,0x0a,0x20,0x20,0x65,0x6e,0x64,0x0a,0x65,0x6e,0x64,0x0a};
+    c0_diff_file_input F[] = {{{v1285,6},{v1286,30}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1280,49,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1284,49,F,1,&out,&n,&err);
     CHECK(rc==1 && n==1);
     if (rc) {
-      static const unsigned char v1283[] = {0x61,0x70,0x70,0x2e,0x72,0x62};
-      static const unsigned char v1284[] = {0x63,0x6c,0x61,0x73,0x73,0x20,0x41,0x70,0x70,0x0a,0x20,0x20,0x64,0x65,0x66,0x20,0x73,0x74,0x61,0x72,0x74,0x0a,0x20,0x20,0x65,0x6e,0x64,0x0a,0x65,0x6e,0x64,0x0a};
-      CHECK(cf_out_eq(out,n,v1283,6,v1284,32));
+      static const unsigned char v1287[] = {0x61,0x70,0x70,0x2e,0x72,0x62};
+      static const unsigned char v1288[] = {0x63,0x6c,0x61,0x73,0x73,0x20,0x41,0x70,0x70,0x0a,0x20,0x20,0x64,0x65,0x66,0x20,0x73,0x74,0x61,0x72,0x74,0x0a,0x20,0x20,0x65,0x6e,0x64,0x0a,0x65,0x6e,0x64,0x0a};
+      CHECK(cf_out_eq(out,n,v1287,6,v1288,32));
       c0_diff_free_outputs(out,n); }
   }
   { /* two-substitutions */
-    static const unsigned char v1285[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x6d,0x2e,0x74,0x78,0x74,0x1d,0x02,0x78,0x20,0x3d,0x20,0x03,0x1f,0x31,0x30,0x1a,0x32,0x30,0x1f,0x02,0x20,0x2b,0x20,0x03,0x1f,0x35,0x1a,0x31,0x35,0x04};
-    static const unsigned char v1286[] = {0x6d,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1287[] = {0x78,0x20,0x3d,0x20,0x31,0x30,0x20,0x2b,0x20,0x35,0x0a};
-    c0_diff_file_input F[] = {{{v1286,5},{v1287,11}}};
+    static const unsigned char v1289[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x6d,0x2e,0x74,0x78,0x74,0x1d,0x02,0x78,0x20,0x3d,0x20,0x03,0x1f,0x31,0x30,0x1a,0x32,0x30,0x1f,0x02,0x20,0x2b,0x20,0x03,0x1f,0x35,0x1a,0x31,0x35,0x04};
+    static const unsigned char v1290[] = {0x6d,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1291[] = {0x78,0x20,0x3d,0x20,0x31,0x30,0x20,0x2b,0x20,0x35,0x0a};
+    c0_diff_file_input F[] = {{{v1290,5},{v1291,11}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1285,43,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1289,43,F,1,&out,&n,&err);
     CHECK(rc==1 && n==1);
     if (rc) {
-      static const unsigned char v1288[] = {0x6d,0x2e,0x74,0x78,0x74};
-      static const unsigned char v1289[] = {0x78,0x20,0x3d,0x20,0x32,0x30,0x20,0x2b,0x20,0x31,0x35,0x0a};
-      CHECK(cf_out_eq(out,n,v1288,5,v1289,12));
+      static const unsigned char v1292[] = {0x6d,0x2e,0x74,0x78,0x74};
+      static const unsigned char v1293[] = {0x78,0x20,0x3d,0x20,0x32,0x30,0x20,0x2b,0x20,0x31,0x35,0x0a};
+      CHECK(cf_out_eq(out,n,v1292,5,v1293,12));
       c0_diff_free_outputs(out,n); }
   }
   { /* insertion */
-    static const unsigned char v1290[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x70,0x79,0x1d,0x02,0x69,0x6d,0x70,0x6f,0x72,0x74,0x20,0x6f,0x73,0x03,0x1f,0x1a,0x02,0x0a,0x69,0x6d,0x70,0x6f,0x72,0x74,0x20,0x73,0x79,0x73,0x03,0x04};
-    static const unsigned char v1291[] = {0x61,0x2e,0x70,0x79};
-    static const unsigned char v1292[] = {0x69,0x6d,0x70,0x6f,0x72,0x74,0x20,0x6f,0x73,0x0a,0x70,0x72,0x69,0x6e,0x74,0x28,0x31,0x29,0x0a};
-    c0_diff_file_input F[] = {{{v1291,4},{v1292,19}}};
+    static const unsigned char v1294[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x70,0x79,0x1d,0x02,0x69,0x6d,0x70,0x6f,0x72,0x74,0x20,0x6f,0x73,0x03,0x1f,0x1a,0x02,0x0a,0x69,0x6d,0x70,0x6f,0x72,0x74,0x20,0x73,0x79,0x73,0x03,0x04};
+    static const unsigned char v1295[] = {0x61,0x2e,0x70,0x79};
+    static const unsigned char v1296[] = {0x69,0x6d,0x70,0x6f,0x72,0x74,0x20,0x6f,0x73,0x0a,0x70,0x72,0x69,0x6e,0x74,0x28,0x31,0x29,0x0a};
+    c0_diff_file_input F[] = {{{v1295,4},{v1296,19}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1290,45,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1294,45,F,1,&out,&n,&err);
     CHECK(rc==1 && n==1);
     if (rc) {
-      static const unsigned char v1293[] = {0x61,0x2e,0x70,0x79};
-      static const unsigned char v1294[] = {0x69,0x6d,0x70,0x6f,0x72,0x74,0x20,0x6f,0x73,0x0a,0x69,0x6d,0x70,0x6f,0x72,0x74,0x20,0x73,0x79,0x73,0x0a,0x70,0x72,0x69,0x6e,0x74,0x28,0x31,0x29,0x0a};
-      CHECK(cf_out_eq(out,n,v1293,4,v1294,30));
+      static const unsigned char v1297[] = {0x61,0x2e,0x70,0x79};
+      static const unsigned char v1298[] = {0x69,0x6d,0x70,0x6f,0x72,0x74,0x20,0x6f,0x73,0x0a,0x69,0x6d,0x70,0x6f,0x72,0x74,0x20,0x73,0x79,0x73,0x0a,0x70,0x72,0x69,0x6e,0x74,0x28,0x31,0x29,0x0a};
+      CHECK(cf_out_eq(out,n,v1297,4,v1298,30));
       c0_diff_free_outputs(out,n); }
   }
   { /* deletion */
-    static const unsigned char v1295[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x02,0x20,0x23,0x20,0x54,0x4f,0x44,0x4f,0x20,0x72,0x65,0x6d,0x6f,0x76,0x65,0x03,0x1a,0x04};
-    static const unsigned char v1296[] = {0x61,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1297[] = {0x6b,0x65,0x65,0x70,0x20,0x23,0x20,0x54,0x4f,0x44,0x4f,0x20,0x72,0x65,0x6d,0x6f,0x76,0x65,0x0a};
-    c0_diff_file_input F[] = {{{v1296,5},{v1297,19}}};
+    static const unsigned char v1299[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x02,0x20,0x23,0x20,0x54,0x4f,0x44,0x4f,0x20,0x72,0x65,0x6d,0x6f,0x76,0x65,0x03,0x1a,0x04};
+    static const unsigned char v1300[] = {0x61,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1301[] = {0x6b,0x65,0x65,0x70,0x20,0x23,0x20,0x54,0x4f,0x44,0x4f,0x20,0x72,0x65,0x6d,0x6f,0x76,0x65,0x0a};
+    c0_diff_file_input F[] = {{{v1300,5},{v1301,19}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1295,37,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1299,37,F,1,&out,&n,&err);
     CHECK(rc==1 && n==1);
     if (rc) {
-      static const unsigned char v1298[] = {0x61,0x2e,0x74,0x78,0x74};
-      static const unsigned char v1299[] = {0x6b,0x65,0x65,0x70,0x0a};
-      CHECK(cf_out_eq(out,n,v1298,5,v1299,5));
+      static const unsigned char v1302[] = {0x61,0x2e,0x74,0x78,0x74};
+      static const unsigned char v1303[] = {0x6b,0x65,0x65,0x70,0x0a};
+      CHECK(cf_out_eq(out,n,v1302,5,v1303,5));
       c0_diff_free_outputs(out,n); }
   }
   { /* assertion */
-    static const unsigned char v1300[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x74,0x77,0x6f,0x1d,0x6f,0x6e,0x65,0x1a,0x75,0x6e,0x6f,0x04};
-    static const unsigned char v1301[] = {0x61,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1302[] = {0x6f,0x6e,0x65,0x0a,0x74,0x77,0x6f,0x0a,0x6f,0x6e,0x65,0x0a};
-    c0_diff_file_input F[] = {{{v1301,5},{v1302,12}}};
+    static const unsigned char v1304[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x74,0x77,0x6f,0x1d,0x6f,0x6e,0x65,0x1a,0x75,0x6e,0x6f,0x04};
+    static const unsigned char v1305[] = {0x61,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1306[] = {0x6f,0x6e,0x65,0x0a,0x74,0x77,0x6f,0x0a,0x6f,0x6e,0x65,0x0a};
+    c0_diff_file_input F[] = {{{v1305,5},{v1306,12}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1300,31,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1304,31,F,1,&out,&n,&err);
     CHECK(rc==1 && n==1);
     if (rc) {
-      static const unsigned char v1303[] = {0x61,0x2e,0x74,0x78,0x74};
-      static const unsigned char v1304[] = {0x6f,0x6e,0x65,0x0a,0x74,0x77,0x6f,0x0a,0x75,0x6e,0x6f,0x0a};
-      CHECK(cf_out_eq(out,n,v1303,5,v1304,12));
+      static const unsigned char v1307[] = {0x61,0x2e,0x74,0x78,0x74};
+      static const unsigned char v1308[] = {0x6f,0x6e,0x65,0x0a,0x74,0x77,0x6f,0x0a,0x75,0x6e,0x6f,0x0a};
+      CHECK(cf_out_eq(out,n,v1307,5,v1308,12));
       c0_diff_free_outputs(out,n); }
   }
   { /* sequential-sections */
-    static const unsigned char v1305[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x02,0x61,0x20,0x62,0x03,0x1a,0x58,0x1d,0x61,0x1a,0x5a,0x04};
-    static const unsigned char v1306[] = {0x61,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1307[] = {0x61,0x20,0x62,0x0a,0x61,0x20,0x63,0x0a};
-    c0_diff_file_input F[] = {{{v1306,5},{v1307,8}}};
+    static const unsigned char v1309[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x02,0x61,0x20,0x62,0x03,0x1a,0x58,0x1d,0x61,0x1a,0x5a,0x04};
+    static const unsigned char v1310[] = {0x61,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1311[] = {0x61,0x20,0x62,0x0a,0x61,0x20,0x63,0x0a};
+    c0_diff_file_input F[] = {{{v1310,5},{v1311,8}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1305,31,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1309,31,F,1,&out,&n,&err);
     CHECK(rc==1 && n==1);
     if (rc) {
-      static const unsigned char v1308[] = {0x61,0x2e,0x74,0x78,0x74};
-      static const unsigned char v1309[] = {0x58,0x0a,0x5a,0x20,0x63,0x0a};
-      CHECK(cf_out_eq(out,n,v1308,5,v1309,6));
+      static const unsigned char v1312[] = {0x61,0x2e,0x74,0x78,0x74};
+      static const unsigned char v1313[] = {0x58,0x0a,0x5a,0x20,0x63,0x0a};
+      CHECK(cf_out_eq(out,n,v1312,5,v1313,6));
       c0_diff_free_outputs(out,n); }
   }
   { /* ambiguous-after-cursor */
-    static const unsigned char v1310[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x61,0x1a,0x41,0x04};
-    static const unsigned char v1311[] = {0x61,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1312[] = {0x61,0x20,0x62,0x20,0x61,0x20,0x62,0x0a};
-    c0_diff_file_input F[] = {{{v1311,5},{v1312,8}}};
+    static const unsigned char v1314[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x61,0x1a,0x41,0x04};
+    static const unsigned char v1315[] = {0x61,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1316[] = {0x61,0x20,0x62,0x20,0x61,0x20,0x62,0x0a};
+    c0_diff_file_input F[] = {{{v1315,5},{v1316,8}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1310,23,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1314,23,F,1,&out,&n,&err);
     CHECK(rc==0 && err.status!=C0_DIFF_OK);
   }
   { /* anchor-mismatch */
-    static const unsigned char v1313[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x63,0x2e,0x63,0x72,0x1d,0x02,0x20,0x20,0x64,0x65,0x66,0x20,0x72,0x75,0x6e,0x0a,0x03,0x1f,0x02,0x20,0x20,0x72,0x65,0x74,0x75,0x72,0x6e,0x20,0x30,0x03,0x1a,0x02,0x20,0x20,0x72,0x65,0x74,0x75,0x72,0x6e,0x20,0x31,0x03,0x04};
-    static const unsigned char v1314[] = {0x63,0x2e,0x63,0x72};
-    static const unsigned char v1315[] = {0x64,0x65,0x66,0x20,0x72,0x75,0x6e,0x0a,0x20,0x20,0x72,0x65,0x74,0x75,0x72,0x6e,0x20,0x30,0x0a,0x65,0x6e,0x64,0x0a};
-    c0_diff_file_input F[] = {{{v1314,4},{v1315,23}}};
+    static const unsigned char v1317[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x63,0x2e,0x63,0x72,0x1d,0x02,0x20,0x20,0x64,0x65,0x66,0x20,0x72,0x75,0x6e,0x0a,0x03,0x1f,0x02,0x20,0x20,0x72,0x65,0x74,0x75,0x72,0x6e,0x20,0x30,0x03,0x1a,0x02,0x20,0x20,0x72,0x65,0x74,0x75,0x72,0x6e,0x20,0x31,0x03,0x04};
+    static const unsigned char v1318[] = {0x63,0x2e,0x63,0x72};
+    static const unsigned char v1319[] = {0x64,0x65,0x66,0x20,0x72,0x75,0x6e,0x0a,0x20,0x20,0x72,0x65,0x74,0x75,0x72,0x6e,0x20,0x30,0x0a,0x65,0x6e,0x64,0x0a};
+    c0_diff_file_input F[] = {{{v1318,4},{v1319,23}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1313,57,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1317,57,F,1,&out,&n,&err);
     CHECK(rc==0 && err.status!=C0_DIFF_OK);
   }
   { /* multiline-text-anchor-ok */
-    static const unsigned char v1316[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x63,0x2e,0x63,0x72,0x1d,0x02,0x64,0x65,0x66,0x20,0x72,0x75,0x6e,0x0a,0x03,0x1f,0x02,0x20,0x20,0x72,0x65,0x74,0x75,0x72,0x6e,0x20,0x30,0x03,0x1a,0x02,0x20,0x20,0x72,0x65,0x74,0x75,0x72,0x6e,0x20,0x31,0x03,0x04};
-    static const unsigned char v1317[] = {0x63,0x2e,0x63,0x72};
-    static const unsigned char v1318[] = {0x64,0x65,0x66,0x20,0x72,0x75,0x6e,0x0a,0x20,0x20,0x72,0x65,0x74,0x75,0x72,0x6e,0x20,0x30,0x0a,0x65,0x6e,0x64,0x0a};
-    c0_diff_file_input F[] = {{{v1317,4},{v1318,23}}};
+    static const unsigned char v1320[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x63,0x2e,0x63,0x72,0x1d,0x02,0x64,0x65,0x66,0x20,0x72,0x75,0x6e,0x0a,0x03,0x1f,0x02,0x20,0x20,0x72,0x65,0x74,0x75,0x72,0x6e,0x20,0x30,0x03,0x1a,0x02,0x20,0x20,0x72,0x65,0x74,0x75,0x72,0x6e,0x20,0x31,0x03,0x04};
+    static const unsigned char v1321[] = {0x63,0x2e,0x63,0x72};
+    static const unsigned char v1322[] = {0x64,0x65,0x66,0x20,0x72,0x75,0x6e,0x0a,0x20,0x20,0x72,0x65,0x74,0x75,0x72,0x6e,0x20,0x30,0x0a,0x65,0x6e,0x64,0x0a};
+    c0_diff_file_input F[] = {{{v1321,4},{v1322,23}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1316,55,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1320,55,F,1,&out,&n,&err);
     CHECK(rc==1 && n==1);
     if (rc) {
-      static const unsigned char v1319[] = {0x63,0x2e,0x63,0x72};
-      static const unsigned char v1320[] = {0x64,0x65,0x66,0x20,0x72,0x75,0x6e,0x0a,0x20,0x20,0x72,0x65,0x74,0x75,0x72,0x6e,0x20,0x31,0x0a,0x65,0x6e,0x64,0x0a};
-      CHECK(cf_out_eq(out,n,v1319,4,v1320,23));
+      static const unsigned char v1323[] = {0x63,0x2e,0x63,0x72};
+      static const unsigned char v1324[] = {0x64,0x65,0x66,0x20,0x72,0x75,0x6e,0x0a,0x20,0x20,0x72,0x65,0x74,0x75,0x72,0x6e,0x20,0x31,0x0a,0x65,0x6e,0x64,0x0a};
+      CHECK(cf_out_eq(out,n,v1323,4,v1324,23));
       c0_diff_free_outputs(out,n); }
   }
   { /* replace-all-in-scope */
-    static const unsigned char v1321[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x74,0x2e,0x72,0x62,0x1d,0x64,0x65,0x66,0x20,0x74,0x61,0x6c,0x6c,0x79,0x28,0x69,0x74,0x65,0x6d,0x73,0x29,0x1e,0x63,0x6f,0x75,0x6e,0x74,0x1a,0x74,0x6f,0x74,0x61,0x6c,0x1d,0x65,0x6e,0x64,0x04};
-    static const unsigned char v1322[] = {0x74,0x2e,0x72,0x62};
-    static const unsigned char v1323[] = {0x63,0x6f,0x75,0x6e,0x74,0x20,0x3d,0x20,0x30,0x0a,0x64,0x65,0x66,0x20,0x74,0x61,0x6c,0x6c,0x79,0x28,0x69,0x74,0x65,0x6d,0x73,0x29,0x0a,0x20,0x20,0x63,0x6f,0x75,0x6e,0x74,0x20,0x3d,0x20,0x30,0x0a,0x20,0x20,0x69,0x74,0x65,0x6d,0x73,0x2e,0x65,0x61,0x63,0x68,0x20,0x7b,0x20,0x63,0x6f,0x75,0x6e,0x74,0x20,0x2b,0x3d,0x20,0x31,0x20,0x7d,0x0a,0x20,0x20,0x63,0x6f,0x75,0x6e,0x74,0x0a,0x65,0x6e,0x64,0x0a,0x63,0x6f,0x75,0x6e,0x74,0x0a};
-    c0_diff_file_input F[] = {{{v1322,4},{v1323,85}}};
+    static const unsigned char v1325[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x74,0x2e,0x72,0x62,0x1d,0x64,0x65,0x66,0x20,0x74,0x61,0x6c,0x6c,0x79,0x28,0x69,0x74,0x65,0x6d,0x73,0x29,0x1e,0x63,0x6f,0x75,0x6e,0x74,0x1a,0x74,0x6f,0x74,0x61,0x6c,0x1d,0x65,0x6e,0x64,0x04};
+    static const unsigned char v1326[] = {0x74,0x2e,0x72,0x62};
+    static const unsigned char v1327[] = {0x63,0x6f,0x75,0x6e,0x74,0x20,0x3d,0x20,0x30,0x0a,0x64,0x65,0x66,0x20,0x74,0x61,0x6c,0x6c,0x79,0x28,0x69,0x74,0x65,0x6d,0x73,0x29,0x0a,0x20,0x20,0x63,0x6f,0x75,0x6e,0x74,0x20,0x3d,0x20,0x30,0x0a,0x20,0x20,0x69,0x74,0x65,0x6d,0x73,0x2e,0x65,0x61,0x63,0x68,0x20,0x7b,0x20,0x63,0x6f,0x75,0x6e,0x74,0x20,0x2b,0x3d,0x20,0x31,0x20,0x7d,0x0a,0x20,0x20,0x63,0x6f,0x75,0x6e,0x74,0x0a,0x65,0x6e,0x64,0x0a,0x63,0x6f,0x75,0x6e,0x74,0x0a};
+    c0_diff_file_input F[] = {{{v1326,4},{v1327,85}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1321,51,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1325,51,F,1,&out,&n,&err);
     CHECK(rc==1 && n==1);
     if (rc) {
-      static const unsigned char v1324[] = {0x74,0x2e,0x72,0x62};
-      static const unsigned char v1325[] = {0x63,0x6f,0x75,0x6e,0x74,0x20,0x3d,0x20,0x30,0x0a,0x64,0x65,0x66,0x20,0x74,0x61,0x6c,0x6c,0x79,0x28,0x69,0x74,0x65,0x6d,0x73,0x29,0x0a,0x20,0x20,0x74,0x6f,0x74,0x61,0x6c,0x20,0x3d,0x20,0x30,0x0a,0x20,0x20,0x69,0x74,0x65,0x6d,0x73,0x2e,0x65,0x61,0x63,0x68,0x20,0x7b,0x20,0x74,0x6f,0x74,0x61,0x6c,0x20,0x2b,0x3d,0x20,0x31,0x20,0x7d,0x0a,0x20,0x20,0x74,0x6f,0x74,0x61,0x6c,0x0a,0x65,0x6e,0x64,0x0a,0x63,0x6f,0x75,0x6e,0x74,0x0a};
-      CHECK(cf_out_eq(out,n,v1324,4,v1325,85));
+      static const unsigned char v1328[] = {0x74,0x2e,0x72,0x62};
+      static const unsigned char v1329[] = {0x63,0x6f,0x75,0x6e,0x74,0x20,0x3d,0x20,0x30,0x0a,0x64,0x65,0x66,0x20,0x74,0x61,0x6c,0x6c,0x79,0x28,0x69,0x74,0x65,0x6d,0x73,0x29,0x0a,0x20,0x20,0x74,0x6f,0x74,0x61,0x6c,0x20,0x3d,0x20,0x30,0x0a,0x20,0x20,0x69,0x74,0x65,0x6d,0x73,0x2e,0x65,0x61,0x63,0x68,0x20,0x7b,0x20,0x74,0x6f,0x74,0x61,0x6c,0x20,0x2b,0x3d,0x20,0x31,0x20,0x7d,0x0a,0x20,0x20,0x74,0x6f,0x74,0x61,0x6c,0x0a,0x65,0x6e,0x64,0x0a,0x63,0x6f,0x75,0x6e,0x74,0x0a};
+      CHECK(cf_out_eq(out,n,v1328,4,v1329,85));
       c0_diff_free_outputs(out,n); }
   }
   { /* replace-all-to-eof */
-    static const unsigned char v1326[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x2d,0x2d,0x1e,0x78,0x1a,0x79,0x04};
-    static const unsigned char v1327[] = {0x61,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1328[] = {0x78,0x0a,0x2d,0x2d,0x0a,0x78,0x20,0x78,0x0a};
-    c0_diff_file_input F[] = {{{v1327,5},{v1328,9}}};
+    static const unsigned char v1330[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x2d,0x2d,0x1e,0x78,0x1a,0x79,0x04};
+    static const unsigned char v1331[] = {0x61,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1332[] = {0x78,0x0a,0x2d,0x2d,0x0a,0x78,0x20,0x78,0x0a};
+    c0_diff_file_input F[] = {{{v1331,5},{v1332,9}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1326,26,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1330,26,F,1,&out,&n,&err);
     CHECK(rc==1 && n==1);
     if (rc) {
-      static const unsigned char v1329[] = {0x61,0x2e,0x74,0x78,0x74};
-      static const unsigned char v1330[] = {0x78,0x0a,0x2d,0x2d,0x0a,0x79,0x20,0x79,0x0a};
-      CHECK(cf_out_eq(out,n,v1329,5,v1330,9));
+      static const unsigned char v1333[] = {0x61,0x2e,0x74,0x78,0x74};
+      static const unsigned char v1334[] = {0x78,0x0a,0x2d,0x2d,0x0a,0x79,0x20,0x79,0x0a};
+      CHECK(cf_out_eq(out,n,v1333,5,v1334,9));
       c0_diff_free_outputs(out,n); }
   }
   { /* replace-all-whole-file */
-    static const unsigned char v1331[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1e,0x78,0x1a,0x79,0x1d,0x2d,0x2d,0x04};
-    static const unsigned char v1332[] = {0x61,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1333[] = {0x78,0x20,0x78,0x0a,0x2d,0x2d,0x0a,0x78,0x0a};
-    c0_diff_file_input F[] = {{{v1332,5},{v1333,9}}};
+    static const unsigned char v1335[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1e,0x78,0x1a,0x79,0x1d,0x2d,0x2d,0x04};
+    static const unsigned char v1336[] = {0x61,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1337[] = {0x78,0x20,0x78,0x0a,0x2d,0x2d,0x0a,0x78,0x0a};
+    c0_diff_file_input F[] = {{{v1336,5},{v1337,9}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1331,26,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1335,26,F,1,&out,&n,&err);
     CHECK(rc==1 && n==1);
     if (rc) {
-      static const unsigned char v1334[] = {0x61,0x2e,0x74,0x78,0x74};
-      static const unsigned char v1335[] = {0x79,0x20,0x79,0x0a,0x2d,0x2d,0x0a,0x78,0x0a};
-      CHECK(cf_out_eq(out,n,v1334,5,v1335,9));
+      static const unsigned char v1338[] = {0x61,0x2e,0x74,0x78,0x74};
+      static const unsigned char v1339[] = {0x79,0x20,0x79,0x0a,0x2d,0x2d,0x0a,0x78,0x0a};
+      CHECK(cf_out_eq(out,n,v1338,5,v1339,9));
       c0_diff_free_outputs(out,n); }
   }
   { /* replace-all-in-order */
-    static const unsigned char v1336[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x2d,0x2d,0x1e,0x61,0x1a,0x62,0x1e,0x62,0x1a,0x63,0x04};
-    static const unsigned char v1337[] = {0x61,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1338[] = {0x2d,0x2d,0x0a,0x61,0x20,0x61,0x0a};
-    c0_diff_file_input F[] = {{{v1337,5},{v1338,7}}};
+    static const unsigned char v1340[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x2d,0x2d,0x1e,0x61,0x1a,0x62,0x1e,0x62,0x1a,0x63,0x04};
+    static const unsigned char v1341[] = {0x61,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1342[] = {0x2d,0x2d,0x0a,0x61,0x20,0x61,0x0a};
+    c0_diff_file_input F[] = {{{v1341,5},{v1342,7}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1336,30,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1340,30,F,1,&out,&n,&err);
     CHECK(rc==1 && n==1);
     if (rc) {
-      static const unsigned char v1339[] = {0x61,0x2e,0x74,0x78,0x74};
-      static const unsigned char v1340[] = {0x2d,0x2d,0x0a,0x63,0x20,0x63,0x0a};
-      CHECK(cf_out_eq(out,n,v1339,5,v1340,7));
+      static const unsigned char v1343[] = {0x61,0x2e,0x74,0x78,0x74};
+      static const unsigned char v1344[] = {0x2d,0x2d,0x0a,0x63,0x20,0x63,0x0a};
+      CHECK(cf_out_eq(out,n,v1343,5,v1344,7));
       c0_diff_free_outputs(out,n); }
   }
   { /* two-files */
-    static const unsigned char v1341[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x66,0x6f,0x6f,0x1a,0x46,0x4f,0x4f,0x1c,0x62,0x2e,0x74,0x78,0x74,0x1d,0x62,0x61,0x72,0x1a,0x42,0x41,0x52,0x04};
-    static const unsigned char v1342[] = {0x61,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1343[] = {0x66,0x6f,0x6f,0x0a};
-    static const unsigned char v1344[] = {0x62,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1345[] = {0x62,0x61,0x72,0x0a};
-    c0_diff_file_input F[] = {{{v1342,5},{v1343,4}},{{v1344,5},{v1345,4}}};
+    static const unsigned char v1345[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x66,0x6f,0x6f,0x1a,0x46,0x4f,0x4f,0x1c,0x62,0x2e,0x74,0x78,0x74,0x1d,0x62,0x61,0x72,0x1a,0x42,0x41,0x52,0x04};
+    static const unsigned char v1346[] = {0x61,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1347[] = {0x66,0x6f,0x6f,0x0a};
+    static const unsigned char v1348[] = {0x62,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1349[] = {0x62,0x61,0x72,0x0a};
+    c0_diff_file_input F[] = {{{v1346,5},{v1347,4}},{{v1348,5},{v1349,4}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1341,41,F,2,&out,&n,&err);
+    int rc = c0_diff_apply(v1345,41,F,2,&out,&n,&err);
     CHECK(rc==1 && n==2);
     if (rc) {
-      static const unsigned char v1346[] = {0x61,0x2e,0x74,0x78,0x74};
-      static const unsigned char v1347[] = {0x46,0x4f,0x4f,0x0a};
-      CHECK(cf_out_eq(out,n,v1346,5,v1347,4));
-      static const unsigned char v1348[] = {0x62,0x2e,0x74,0x78,0x74};
-      static const unsigned char v1349[] = {0x42,0x41,0x52,0x0a};
-      CHECK(cf_out_eq(out,n,v1348,5,v1349,4));
+      static const unsigned char v1350[] = {0x61,0x2e,0x74,0x78,0x74};
+      static const unsigned char v1351[] = {0x46,0x4f,0x4f,0x0a};
+      CHECK(cf_out_eq(out,n,v1350,5,v1351,4));
+      static const unsigned char v1352[] = {0x62,0x2e,0x74,0x78,0x74};
+      static const unsigned char v1353[] = {0x42,0x41,0x52,0x0a};
+      CHECK(cf_out_eq(out,n,v1352,5,v1353,4));
       c0_diff_free_outputs(out,n); }
   }
   { /* note-and-dead-section */
-    static const unsigned char v1350[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x07,0x20,0x63,0x61,0x72,0x65,0x66,0x75,0x6c,0x1d,0x66,0x6f,0x6f,0x1a,0x46,0x4f,0x4f,0x07,0x1d,0x62,0x61,0x72,0x1a,0x42,0x41,0x52,0x04};
-    static const unsigned char v1351[] = {0x61,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1352[] = {0x66,0x6f,0x6f,0x20,0x62,0x61,0x72,0x0a};
-    c0_diff_file_input F[] = {{{v1351,5},{v1352,8}}};
+    static const unsigned char v1354[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x07,0x20,0x63,0x61,0x72,0x65,0x66,0x75,0x6c,0x1d,0x66,0x6f,0x6f,0x1a,0x46,0x4f,0x4f,0x07,0x1d,0x62,0x61,0x72,0x1a,0x42,0x41,0x52,0x04};
+    static const unsigned char v1355[] = {0x61,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1356[] = {0x66,0x6f,0x6f,0x20,0x62,0x61,0x72,0x0a};
+    c0_diff_file_input F[] = {{{v1355,5},{v1356,8}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1350,45,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1354,45,F,1,&out,&n,&err);
     CHECK(rc==1 && n==1);
     if (rc) {
-      static const unsigned char v1353[] = {0x61,0x2e,0x74,0x78,0x74};
-      static const unsigned char v1354[] = {0x46,0x4f,0x4f,0x20,0x62,0x61,0x72,0x0a};
-      CHECK(cf_out_eq(out,n,v1353,5,v1354,8));
+      static const unsigned char v1357[] = {0x61,0x2e,0x74,0x78,0x74};
+      static const unsigned char v1358[] = {0x46,0x4f,0x4f,0x20,0x62,0x61,0x72,0x0a};
+      CHECK(cf_out_eq(out,n,v1357,5,v1358,8));
       c0_diff_free_outputs(out,n); }
   }
   { /* no-match */
-    static const unsigned char v1355[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x66,0x6f,0x6f,0x1a,0x46,0x4f,0x4f,0x1c,0x62,0x2e,0x74,0x78,0x74,0x1d,0x62,0x61,0x7a,0x1a,0x42,0x41,0x5a,0x04};
-    static const unsigned char v1356[] = {0x61,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1357[] = {0x66,0x6f,0x6f,0x0a};
-    static const unsigned char v1358[] = {0x62,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1359[] = {0x62,0x61,0x72,0x0a};
-    c0_diff_file_input F[] = {{{v1356,5},{v1357,4}},{{v1358,5},{v1359,4}}};
+    static const unsigned char v1359[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x66,0x6f,0x6f,0x1a,0x46,0x4f,0x4f,0x1c,0x62,0x2e,0x74,0x78,0x74,0x1d,0x62,0x61,0x7a,0x1a,0x42,0x41,0x5a,0x04};
+    static const unsigned char v1360[] = {0x61,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1361[] = {0x66,0x6f,0x6f,0x0a};
+    static const unsigned char v1362[] = {0x62,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1363[] = {0x62,0x61,0x72,0x0a};
+    c0_diff_file_input F[] = {{{v1360,5},{v1361,4}},{{v1362,5},{v1363,4}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1355,41,F,2,&out,&n,&err);
+    int rc = c0_diff_apply(v1359,41,F,2,&out,&n,&err);
     CHECK(rc==0 && err.status!=C0_DIFF_OK);
   }
   { /* ambiguous */
-    static const unsigned char v1360[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x66,0x6f,0x6f,0x1a,0x46,0x4f,0x4f,0x04};
-    static const unsigned char v1361[] = {0x61,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1362[] = {0x66,0x6f,0x6f,0x20,0x66,0x6f,0x6f,0x0a};
-    c0_diff_file_input F[] = {{{v1361,5},{v1362,8}}};
+    static const unsigned char v1364[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x66,0x6f,0x6f,0x1a,0x46,0x4f,0x4f,0x04};
+    static const unsigned char v1365[] = {0x61,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1366[] = {0x66,0x6f,0x6f,0x20,0x66,0x6f,0x6f,0x0a};
+    c0_diff_file_input F[] = {{{v1365,5},{v1366,8}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1360,27,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1364,27,F,1,&out,&n,&err);
     CHECK(rc==0 && err.status!=C0_DIFF_OK);
   }
   { /* replace-all-nothing */
-    static const unsigned char v1363[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x2d,0x2d,0x1e,0x62,0x61,0x72,0x1a,0x62,0x61,0x7a,0x04};
-    static const unsigned char v1364[] = {0x61,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1365[] = {0x2d,0x2d,0x0a,0x66,0x6f,0x6f,0x0a};
-    c0_diff_file_input F[] = {{{v1364,5},{v1365,7}}};
+    static const unsigned char v1367[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x2d,0x2d,0x1e,0x62,0x61,0x72,0x1a,0x62,0x61,0x7a,0x04};
+    static const unsigned char v1368[] = {0x61,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1369[] = {0x2d,0x2d,0x0a,0x66,0x6f,0x6f,0x0a};
+    c0_diff_file_input F[] = {{{v1368,5},{v1369,7}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1363,30,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1367,30,F,1,&out,&n,&err);
     CHECK(rc==0 && err.status!=C0_DIFF_OK);
   }
   { /* replace-all-empty-old */
-    static const unsigned char v1366[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x2d,0x2d,0x1e,0x1a,0x78,0x04};
-    static const unsigned char v1367[] = {0x61,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1368[] = {0x2d,0x2d,0x0a};
-    c0_diff_file_input F[] = {{{v1367,5},{v1368,3}}};
+    static const unsigned char v1370[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x2d,0x2d,0x1e,0x1a,0x78,0x04};
+    static const unsigned char v1371[] = {0x61,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1372[] = {0x2d,0x2d,0x0a};
+    c0_diff_file_input F[] = {{{v1371,5},{v1372,3}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1366,25,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1370,25,F,1,&out,&n,&err);
     CHECK(rc==0 && err.status!=C0_DIFF_OK);
   }
   { /* wrong-shape */
-    static const unsigned char v1369[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x73,0x74,0x72,0x65,0x61,0x6d,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x66,0x6f,0x6f,0x1a,0x62,0x61,0x72,0x04};
-    static const unsigned char v1370[] = {0x61,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1371[] = {0x66,0x6f,0x6f,0x0a};
-    c0_diff_file_input F[] = {{{v1370,5},{v1371,4}}};
+    static const unsigned char v1373[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x73,0x74,0x72,0x65,0x61,0x6d,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x66,0x6f,0x6f,0x1a,0x62,0x61,0x72,0x04};
+    static const unsigned char v1374[] = {0x61,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1375[] = {0x66,0x6f,0x6f,0x0a};
+    c0_diff_file_input F[] = {{{v1374,5},{v1375,4}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1369,29,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1373,29,F,1,&out,&n,&err);
     CHECK(rc==0 && err.status!=C0_DIFF_OK);
   }
   { /* dead-file-line */
-    static const unsigned char v1372[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x66,0x6f,0x6f,0x1a,0x46,0x4f,0x4f,0x07,0x1c,0x62,0x2e,0x74,0x78,0x74,0x1d,0x62,0x61,0x7a,0x1a,0x42,0x41,0x5a,0x04};
-    static const unsigned char v1373[] = {0x61,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1374[] = {0x66,0x6f,0x6f,0x20,0x62,0x61,0x7a,0x0a};
-    c0_diff_file_input F[] = {{{v1373,5},{v1374,8}}};
+    static const unsigned char v1376[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x66,0x6f,0x6f,0x1a,0x46,0x4f,0x4f,0x07,0x1c,0x62,0x2e,0x74,0x78,0x74,0x1d,0x62,0x61,0x7a,0x1a,0x42,0x41,0x5a,0x04};
+    static const unsigned char v1377[] = {0x61,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1378[] = {0x66,0x6f,0x6f,0x20,0x62,0x61,0x7a,0x0a};
+    c0_diff_file_input F[] = {{{v1377,5},{v1378,8}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1372,42,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1376,42,F,1,&out,&n,&err);
     CHECK(rc==1 && n==1);
     if (rc) {
-      static const unsigned char v1375[] = {0x61,0x2e,0x74,0x78,0x74};
-      static const unsigned char v1376[] = {0x46,0x4f,0x4f,0x20,0x42,0x41,0x5a,0x0a};
-      CHECK(cf_out_eq(out,n,v1375,5,v1376,8));
+      static const unsigned char v1379[] = {0x61,0x2e,0x74,0x78,0x74};
+      static const unsigned char v1380[] = {0x46,0x4f,0x4f,0x20,0x42,0x41,0x5a,0x0a};
+      CHECK(cf_out_eq(out,n,v1379,5,v1380,8));
       c0_diff_free_outputs(out,n); }
   }
   { /* dead-section-replace-attaches */
-    static const unsigned char v1377[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x41,0x07,0x1d,0x43,0x1e,0x78,0x1a,0x79,0x04};
-    static const unsigned char v1378[] = {0x61,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1379[] = {0x41,0x20,0x78,0x0a,0x43,0x20,0x78,0x0a};
-    c0_diff_file_input F[] = {{{v1378,5},{v1379,8}}};
+    static const unsigned char v1381[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x41,0x07,0x1d,0x43,0x1e,0x78,0x1a,0x79,0x04};
+    static const unsigned char v1382[] = {0x61,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1383[] = {0x41,0x20,0x78,0x0a,0x43,0x20,0x78,0x0a};
+    c0_diff_file_input F[] = {{{v1382,5},{v1383,8}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1377,28,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1381,28,F,1,&out,&n,&err);
     CHECK(rc==1 && n==1);
     if (rc) {
-      static const unsigned char v1380[] = {0x61,0x2e,0x74,0x78,0x74};
-      static const unsigned char v1381[] = {0x41,0x20,0x79,0x0a,0x43,0x20,0x79,0x0a};
-      CHECK(cf_out_eq(out,n,v1380,5,v1381,8));
+      static const unsigned char v1384[] = {0x61,0x2e,0x74,0x78,0x74};
+      static const unsigned char v1385[] = {0x41,0x20,0x79,0x0a,0x43,0x20,0x79,0x0a};
+      CHECK(cf_out_eq(out,n,v1384,5,v1385,8));
       c0_diff_free_outputs(out,n); }
   }
   { /* text-note-in-body */
-    static const unsigned char v1382[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x07,0x02,0x6e,0x6f,0x74,0x65,0x20,0x1e,0x20,0x77,0x69,0x74,0x68,0x20,0x63,0x6f,0x64,0x65,0x73,0x03,0x1d,0x66,0x6f,0x6f,0x1a,0x62,0x61,0x72,0x04};
-    static const unsigned char v1383[] = {0x61,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1384[] = {0x66,0x6f,0x6f,0x0a};
-    c0_diff_file_input F[] = {{{v1383,5},{v1384,4}}};
+    static const unsigned char v1386[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x07,0x02,0x6e,0x6f,0x74,0x65,0x20,0x1e,0x20,0x77,0x69,0x74,0x68,0x20,0x63,0x6f,0x64,0x65,0x73,0x03,0x1d,0x66,0x6f,0x6f,0x1a,0x62,0x61,0x72,0x04};
+    static const unsigned char v1387[] = {0x61,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1388[] = {0x66,0x6f,0x6f,0x0a};
+    c0_diff_file_input F[] = {{{v1387,5},{v1388,4}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1382,47,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1386,47,F,1,&out,&n,&err);
     CHECK(rc==1 && n==1);
     if (rc) {
-      static const unsigned char v1385[] = {0x61,0x2e,0x74,0x78,0x74};
-      static const unsigned char v1386[] = {0x62,0x61,0x72,0x0a};
-      CHECK(cf_out_eq(out,n,v1385,5,v1386,4));
+      static const unsigned char v1389[] = {0x61,0x2e,0x74,0x78,0x74};
+      static const unsigned char v1390[] = {0x62,0x61,0x72,0x0a};
+      CHECK(cf_out_eq(out,n,v1389,5,v1390,4));
       c0_diff_free_outputs(out,n); }
   }
   { /* note-in-pattern */
-    static const unsigned char v1387[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x61,0x07,0x6e,0x1f,0x62,0x1a,0x63,0x04};
-    static const unsigned char v1388[] = {0x61,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1389[] = {0x61,0x62,0x0a};
-    c0_diff_file_input F[] = {{{v1388,5},{v1389,3}}};
+    static const unsigned char v1391[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x61,0x07,0x6e,0x1f,0x62,0x1a,0x63,0x04};
+    static const unsigned char v1392[] = {0x61,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1393[] = {0x61,0x62,0x0a};
+    c0_diff_file_input F[] = {{{v1392,5},{v1393,3}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1387,27,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1391,27,F,1,&out,&n,&err);
     CHECK(rc==1 && n==1);
     if (rc) {
-      static const unsigned char v1390[] = {0x61,0x2e,0x74,0x78,0x74};
-      static const unsigned char v1391[] = {0x61,0x63,0x0a};
-      CHECK(cf_out_eq(out,n,v1390,5,v1391,3));
+      static const unsigned char v1394[] = {0x61,0x2e,0x74,0x78,0x74};
+      static const unsigned char v1395[] = {0x61,0x63,0x0a};
+      CHECK(cf_out_eq(out,n,v1394,5,v1395,3));
       c0_diff_free_outputs(out,n); }
   }
   { /* commit-tolerated */
-    static const unsigned char v1392[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x66,0x6f,0x6f,0x1a,0x62,0x61,0x72,0x17,0x04};
-    static const unsigned char v1393[] = {0x61,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1394[] = {0x66,0x6f,0x6f,0x0a};
-    c0_diff_file_input F[] = {{{v1393,5},{v1394,4}}};
+    static const unsigned char v1396[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x66,0x6f,0x6f,0x1a,0x62,0x61,0x72,0x17,0x04};
+    static const unsigned char v1397[] = {0x61,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1398[] = {0x66,0x6f,0x6f,0x0a};
+    c0_diff_file_input F[] = {{{v1397,5},{v1398,4}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1392,28,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1396,28,F,1,&out,&n,&err);
     CHECK(rc==1 && n==1);
     if (rc) {
-      static const unsigned char v1395[] = {0x61,0x2e,0x74,0x78,0x74};
-      static const unsigned char v1396[] = {0x62,0x61,0x72,0x0a};
-      CHECK(cf_out_eq(out,n,v1395,5,v1396,4));
+      static const unsigned char v1399[] = {0x61,0x2e,0x74,0x78,0x74};
+      static const unsigned char v1400[] = {0x62,0x61,0x72,0x0a};
+      CHECK(cf_out_eq(out,n,v1399,5,v1400,4));
       c0_diff_free_outputs(out,n); }
   }
   { /* overlapping-ambiguous */
-    static const unsigned char v1397[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x61,0x61,0x1a,0x62,0x04};
-    static const unsigned char v1398[] = {0x61,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1399[] = {0x61,0x61,0x61,0x0a};
-    c0_diff_file_input F[] = {{{v1398,5},{v1399,4}}};
+    static const unsigned char v1401[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x61,0x61,0x1a,0x62,0x04};
+    static const unsigned char v1402[] = {0x61,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1403[] = {0x61,0x61,0x61,0x0a};
+    c0_diff_file_input F[] = {{{v1402,5},{v1403,4}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1397,24,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1401,24,F,1,&out,&n,&err);
     CHECK(rc==0 && err.status!=C0_DIFF_OK);
   }
   { /* same-path-twice */
-    static const unsigned char v1400[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x66,0x6f,0x6f,0x1a,0x46,0x4f,0x4f,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x62,0x61,0x72,0x1a,0x42,0x41,0x52,0x04};
-    static const unsigned char v1401[] = {0x61,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1402[] = {0x66,0x6f,0x6f,0x20,0x62,0x61,0x72,0x0a};
-    c0_diff_file_input F[] = {{{v1401,5},{v1402,8}}};
+    static const unsigned char v1404[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x66,0x6f,0x6f,0x1a,0x46,0x4f,0x4f,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x62,0x61,0x72,0x1a,0x42,0x41,0x52,0x04};
+    static const unsigned char v1405[] = {0x61,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1406[] = {0x66,0x6f,0x6f,0x20,0x62,0x61,0x72,0x0a};
+    c0_diff_file_input F[] = {{{v1405,5},{v1406,8}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1400,41,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1404,41,F,1,&out,&n,&err);
     CHECK(rc==0 && err.status!=C0_DIFF_OK);
   }
   { /* bytes-after-eot */
-    static const unsigned char v1403[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x66,0x6f,0x6f,0x1a,0x46,0x4f,0x4f,0x04,0x1d,0x62,0x61,0x72,0x1a,0x42,0x41,0x52};
-    static const unsigned char v1404[] = {0x61,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1405[] = {0x66,0x6f,0x6f,0x20,0x62,0x61,0x72,0x0a};
-    c0_diff_file_input F[] = {{{v1404,5},{v1405,8}}};
+    static const unsigned char v1407[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x66,0x6f,0x6f,0x1a,0x46,0x4f,0x4f,0x04,0x1d,0x62,0x61,0x72,0x1a,0x42,0x41,0x52};
+    static const unsigned char v1408[] = {0x61,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1409[] = {0x66,0x6f,0x6f,0x20,0x62,0x61,0x72,0x0a};
+    c0_diff_file_input F[] = {{{v1408,5},{v1409,8}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1403,35,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1407,35,F,1,&out,&n,&err);
     CHECK(rc==0 && err.status!=C0_DIFF_OK);
   }
   { /* text-path */
-    static const unsigned char v1406[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x02,0x61,0x2e,0x74,0x78,0x74,0x03,0x1d,0x66,0x6f,0x6f,0x1a,0x62,0x61,0x72,0x04};
-    static const unsigned char v1407[] = {0x61,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1408[] = {0x66,0x6f,0x6f,0x0a};
-    c0_diff_file_input F[] = {{{v1407,5},{v1408,4}}};
+    static const unsigned char v1410[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x02,0x61,0x2e,0x74,0x78,0x74,0x03,0x1d,0x66,0x6f,0x6f,0x1a,0x62,0x61,0x72,0x04};
+    static const unsigned char v1411[] = {0x61,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1412[] = {0x66,0x6f,0x6f,0x0a};
+    c0_diff_file_input F[] = {{{v1411,5},{v1412,4}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1406,29,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1410,29,F,1,&out,&n,&err);
     CHECK(rc==0 && err.status!=C0_DIFF_OK);
   }
   { /* dead-heading-key */
-    static const unsigned char v1409[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x07,0x01,0x78,0x1f,0x79,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x66,0x6f,0x6f,0x1a,0x62,0x61,0x72,0x04};
-    static const unsigned char v1410[] = {0x61,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1411[] = {0x66,0x6f,0x6f,0x0a};
-    c0_diff_file_input F[] = {{{v1410,5},{v1411,4}}};
+    static const unsigned char v1413[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x07,0x01,0x78,0x1f,0x79,0x1c,0x61,0x2e,0x74,0x78,0x74,0x1d,0x66,0x6f,0x6f,0x1a,0x62,0x61,0x72,0x04};
+    static const unsigned char v1414[] = {0x61,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1415[] = {0x66,0x6f,0x6f,0x0a};
+    c0_diff_file_input F[] = {{{v1414,5},{v1415,4}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1409,32,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1413,32,F,1,&out,&n,&err);
     CHECK(rc==1 && n==1);
     if (rc) {
-      static const unsigned char v1412[] = {0x61,0x2e,0x74,0x78,0x74};
-      static const unsigned char v1413[] = {0x62,0x61,0x72,0x0a};
-      CHECK(cf_out_eq(out,n,v1412,5,v1413,4));
+      static const unsigned char v1416[] = {0x61,0x2e,0x74,0x78,0x74};
+      static const unsigned char v1417[] = {0x62,0x61,0x72,0x0a};
+      CHECK(cf_out_eq(out,n,v1416,5,v1417,4));
       c0_diff_free_outputs(out,n); }
   }
   { /* missing-file */
-    static const unsigned char v1414[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x62,0x2e,0x74,0x78,0x74,0x1d,0x66,0x6f,0x6f,0x1a,0x62,0x61,0x72,0x04};
-    static const unsigned char v1415[] = {0x61,0x2e,0x74,0x78,0x74};
-    static const unsigned char v1416[] = {0x66,0x6f,0x6f,0x0a};
-    c0_diff_file_input F[] = {{{v1415,5},{v1416,4}}};
+    static const unsigned char v1418[] = {0x16,0x01,0x73,0x68,0x61,0x70,0x65,0x1f,0x64,0x69,0x66,0x66,0x1c,0x62,0x2e,0x74,0x78,0x74,0x1d,0x66,0x6f,0x6f,0x1a,0x62,0x61,0x72,0x04};
+    static const unsigned char v1419[] = {0x61,0x2e,0x74,0x78,0x74};
+    static const unsigned char v1420[] = {0x66,0x6f,0x6f,0x0a};
+    c0_diff_file_input F[] = {{{v1419,5},{v1420,4}}};
     c0_diff_file_output *out = 0; size_t n = 0; c0_diff_error err;
-    int rc = c0_diff_apply(v1414,27,F,1,&out,&n,&err);
+    int rc = c0_diff_apply(v1418,27,F,1,&out,&n,&err);
     CHECK(rc==0 && err.status!=C0_DIFF_OK);
   }
 }
